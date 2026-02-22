@@ -1,0 +1,11 @@
+/home/muchini/dev/spec-forge/fuzz/target/x86_64-unknown-linux-gnu/release/deps/console-01320c9f739601c2.d: /home/muchini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/console-0.16.2/src/lib.rs /home/muchini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/console-0.16.2/src/common_term.rs /home/muchini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/console-0.16.2/src/kb.rs /home/muchini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/console-0.16.2/src/term.rs /home/muchini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/console-0.16.2/src/unix_term.rs /home/muchini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/console-0.16.2/src/utils.rs /home/muchini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/console-0.16.2/src/ansi.rs
+
+/home/muchini/dev/spec-forge/fuzz/target/x86_64-unknown-linux-gnu/release/deps/libconsole-01320c9f739601c2.rmeta: /home/muchini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/console-0.16.2/src/lib.rs /home/muchini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/console-0.16.2/src/common_term.rs /home/muchini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/console-0.16.2/src/kb.rs /home/muchini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/console-0.16.2/src/term.rs /home/muchini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/console-0.16.2/src/unix_term.rs /home/muchini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/console-0.16.2/src/utils.rs /home/muchini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/console-0.16.2/src/ansi.rs
+
+/home/muchini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/console-0.16.2/src/lib.rs:
+/home/muchini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/console-0.16.2/src/common_term.rs:
+/home/muchini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/console-0.16.2/src/kb.rs:
+/home/muchini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/console-0.16.2/src/term.rs:
+/home/muchini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/console-0.16.2/src/unix_term.rs:
+/home/muchini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/console-0.16.2/src/utils.rs:
+/home/muchini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/console-0.16.2/src/ansi.rs:

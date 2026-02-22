@@ -1,0 +1,30 @@
+---
+source: src/adapters/output/gherkin_writer.rs
+expression: content
+---
+# language: en
+
+@US-001 @P1
+Feature: Recherche par ISBN
+  En tant que bibliothecaire
+  Je veux rechercher par ISBN
+
+  Background:
+    Given un catalogue contenant 1000 ouvrages
+
+  @happy_path @FR-001
+  Scenario: Recherche avec ISBN-13 valide
+    Given un ouvrage avec l'ISBN "978-2-07-036024-1" dans le catalogue
+    When je saisis "978-2-07-036024-1" dans le champ de recherche
+    Then l'ouvrage "Le Petit Prince" est affiche
+
+  @edge_case
+  Scenario Outline: Recherche avec formats ISBN varies
+    Given un ouvrage avec l'ISBN "<isbn>" dans le catalogue
+    When je saisis "<isbn>" dans le champ de recherche
+    Then l'ouvrage est trouve
+
+    Examples:
+      | isbn | format |
+      | 978-2-07-036024-1 | ISBN-13 |
+      | 2-07-036024-8 | ISBN-10 |

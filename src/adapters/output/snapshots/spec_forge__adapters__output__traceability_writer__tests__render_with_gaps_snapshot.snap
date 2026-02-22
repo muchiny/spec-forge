@@ -1,0 +1,35 @@
+---
+source: src/adapters/output/traceability_writer.rs
+expression: output
+---
+# Matrice de Tracabilite
+
+**Specification**: Test Spec
+**Date**: 2025-01-15
+**Version**: 1.0.0
+**Conformite**: ISO/IEC/IEEE 29148:2018 section 6.6
+
+## Matrice de tracabilite exigences-tests
+
+| FR-ID | Priorite | Risque | Verification | Feature | Scenarios | Technique | Statut |
+|-------|----------|--------|-------------|---------|-----------|-----------|--------|
+| FR-001 | P1 (Must) | - | Test | Test Feature | 2 | - | Couvert |
+| FR-002 | P1 (Must) | - | Test | - | 0 | - | **GAP** |
+| FR-003 | P1 (Must) | - | Test | - | 0 | - | **GAP** |
+
+## Resume de couverture
+
+- Exigences totales: 3
+- Couvertes: 1 | Partielles: 0 | GAP: 2 | Autre verification: 0
+- Couverture forward: **33%**
+- Scenarios happy path: 1
+- Scenarios edge case: 1
+- Scenarios erreur: 0
+- Total scenarios: 2
+
+## Notes de conformite
+
+| Norme | Section | Statut | Details |
+|-------|---------|--------|---------|
+| ISO/IEC/IEEE 29148:2018 | 6.6 — Traceability | Non conforme | Couverture forward: 33% |
+| ISO/IEC/IEEE 29148:2018 | 5.2.5 — Well-formed requirements | Conforme | 3 exigences dans la matrice |

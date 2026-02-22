@@ -1,0 +1,21 @@
+language: fr
+stories:
+  - id: "550e8400-e29b-41d4-a716-446655440000"
+    title: Recherche par ISBN
+    actor: bibliothecaire
+    action: rechercher un livre par ISBN
+    benefit: trouver rapidement un ouvrage specifique
+    priority: P1
+    acceptance_criteria:
+      - Le champ de saisie accepte les formats ISBN-10 et ISBN-13
+      - Les resultats s'affichent en moins de 2 secondes
+
+  - id: "550e8400-e29b-41d4-a716-446655440001"
+    title: Inscription en ligne
+    actor: futur adherent
+    action: m'inscrire en ligne
+    benefit: pouvoir emprunter des livres sans me deplacer
+    priority: P1
+    acceptance_criteria:
+      - Le formulaire demande nom, prenom, email et adresse
+      - Un email de confirmation est envoye automatiquement

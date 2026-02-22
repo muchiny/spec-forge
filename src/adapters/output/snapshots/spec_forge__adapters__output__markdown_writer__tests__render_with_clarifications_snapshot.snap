@@ -1,0 +1,32 @@
+---
+source: src/adapters/output/markdown_writer.rs
+expression: md
+---
+# Feature Specification: Spec avec clarifications
+
+**Created**: 2025-01-15
+**Status**: Draft
+**Version**: 1.0.0
+**Tool**: spec-forge v0.1.0
+
+## User Scenarios & Testing
+
+## Requirements
+
+### Functional Requirements
+
+| ID | Enonce | Priorite | Categorie | Verification | Risque |
+|---|--------|----------|-----------|-------------|--------|
+
+## Success Criteria
+
+### Measurable Outcomes
+
+
+## Clarifications
+
+- **[NEEDS CLARIFICATION]**: Quel format d'ISBN est prioritaire ?
+  - Contexte: ISBN-10 est obsolete depuis 2007
+  - Impact: Affecte la validation en entree
+  - Options: ISBN-13 uniquement, Les deux formats
+- **Q**: Faut-il supporter les tirets ? -> **A**: Oui, les deux formats

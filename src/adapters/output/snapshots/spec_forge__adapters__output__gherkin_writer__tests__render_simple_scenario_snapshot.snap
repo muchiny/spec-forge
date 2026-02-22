@@ -1,0 +1,15 @@
+---
+source: src/adapters/output/gherkin_writer.rs
+expression: content
+---
+# language: fr
+
+@auth
+Fonctionnalité: Login utilisateur
+  Authentification
+
+  @happy_path
+  Scénario: Connexion reussie
+    Soit un utilisateur enregistre
+    Quand il saisit ses identifiants
+    Alors il est connecte

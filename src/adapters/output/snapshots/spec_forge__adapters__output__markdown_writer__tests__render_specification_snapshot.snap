@@ -1,0 +1,40 @@
+---
+source: src/adapters/output/markdown_writer.rs
+expression: md
+---
+# Feature Specification: Recherche Bibliotheque
+
+**Created**: 2025-01-15
+**Status**: Draft
+**Version**: 1.0.0
+**Tool**: spec-forge v0.1.0
+
+## User Scenarios & Testing
+
+### US-001 - Recherche ISBN (Priority: P1 (Must))
+
+Rechercher un livre par ISBN
+
+**Why this priority**: Fonctionnalite critique
+
+**Independent Test**: Saisir un ISBN et verifier le resultat
+
+**Acceptance Scenarios**:
+
+1. **Given** un catalogue contenant des livres, **When** je saisis un ISBN valide, **Then** le livre correspondant s'affiche
+
+---
+
+## Requirements
+
+### Functional Requirements
+
+| ID | Enonce | Priorite | Categorie | Verification | Risque |
+|---|--------|----------|-----------|-------------|--------|
+| FR-001 | Le systeme DOIT permettre la recherche par ISBN | P1 (Must) | Fonctionnelle | Test | - |
+
+## Success Criteria
+
+### Measurable Outcomes
+
+- **SC-001**: Recherche rapide (Metrique: Temps de reponse < 2s)

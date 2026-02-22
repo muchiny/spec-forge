@@ -1,0 +1,134 @@
+language: fr
+stories:
+  - id: "a1b2c3d4-1111-4000-a000-000000000001"
+    title: Authentification biometrique
+    actor: client de la banque
+    action: me connecter avec mon empreinte digitale ou la reconnaissance faciale
+    benefit: acceder a mes comptes de maniere securisee et rapide sans taper de mot de passe
+    priority: P1
+    acceptance_criteria:
+      - L'empreinte digitale et Face ID / Android Biometric sont supportes
+      - L'authentification biometrique echoue apres 3 tentatives et bascule sur le code PIN a 6 chiffres
+      - La session expire automatiquement apres 5 minutes d'inactivite
+      - Au premier lancement apres installation, le mot de passe classique est obligatoire avant d'activer la biometrie
+      - Un journal de connexion horodate est disponible dans les parametres de securite
+      - L'authentification biometrique peut etre desactivee a tout moment par l'utilisateur
+
+  - id: "a1b2c3d4-1111-4000-a000-000000000002"
+    title: Consultation des soldes et operations
+    actor: client de la banque
+    action: consulter le solde et l'historique de mes comptes courants et epargne
+    benefit: suivre ma situation financiere en temps reel
+    priority: P1
+    acceptance_criteria:
+      - Le solde de chaque compte s'affiche des la page d'accueil apres connexion
+      - L'historique des operations est disponible sur 13 mois glissants
+      - Chaque operation affiche la date, le libelle, le montant et le solde apres operation
+      - Les operations en attente (non comptabilisees) sont distinguees visuellement en italique
+      - La recherche par mot-cle ou montant fonctionne dans l'historique
+      - Un pull-to-refresh met a jour les donnees depuis le serveur en moins de 2 secondes
+      - Les donnees sont consultables hors-ligne avec la derniere synchronisation affichee
+
+  - id: "a1b2c3d4-1111-4000-a000-000000000003"
+    title: Virement instantane SEPA
+    actor: client de la banque
+    action: effectuer un virement instantane vers un autre compte bancaire en zone SEPA
+    benefit: transferer de l'argent en quelques secondes, y compris le week-end et les jours feries
+    priority: P1
+    acceptance_criteria:
+      - Le virement est execute en moins de 10 secondes et le debit est immediat
+      - Le montant maximum par virement instantane est de 15 000 euros
+      - Le cumul journalier des virements instantanes ne depasse pas 30 000 euros
+      - Le beneficiaire peut etre selectionne depuis le carnet d'adresses ou saisi manuellement via IBAN
+      - La validation du virement necessite la biometrie ou le code PIN
+      - Une notification push confirme l'execution ou l'echec du virement dans les 30 secondes
+      - Les frais de 0.50 euro par virement instantane sont affiches clairement avant validation
+      - L'annulation est impossible une fois le virement envoye, un message d'alerte le precise
+
+  - id: "a1b2c3d4-1111-4000-a000-000000000004"
+    title: Gestion des cartes bancaires
+    actor: client de la banque
+    action: gerer les parametres de ma carte bancaire depuis l'application
+    benefit: controler mes plafonds, bloquer ma carte temporairement et activer le paiement sans contact
+    priority: P2
+    acceptance_criteria:
+      - L'activation et desactivation du paiement sans contact prend effet en moins de 30 secondes
+      - Le blocage temporaire de la carte est instantane et reversible sans appeler la banque
+      - Les plafonds de paiement et de retrait sont modifiables dans des limites definies par le contrat
+      - Le code PIN peut etre consulte de maniere securisee (affichage 10 secondes apres biometrie)
+      - L'opposition definitive necessite une double confirmation et genere un numero de dossier
+      - Le suivi des paiements en attente et des prelevements a venir est visible sur un calendrier
+
+  - id: "a1b2c3d4-1111-4000-a000-000000000005"
+    title: Alertes et notifications parametrables
+    actor: client de la banque
+    action: configurer des alertes sur mes comptes et operations
+    benefit: etre prevenu en temps reel des mouvements importants et eviter les depassements
+    priority: P2
+    acceptance_criteria:
+      - Alerte configurable sur depassement de seuil (solde en dessous de X euros)
+      - Alerte a chaque operation superieure a un montant defini par l'utilisateur
+      - Notification a chaque connexion depuis un nouvel appareil
+      - Alerte sur les prelevements inhabituels (montant significativement superieur au precedent)
+      - Les alertes sont envoyees par push notification, email ou SMS selon la preference
+      - L'utilisateur peut desactiver individuellement chaque type d'alerte
+      - Les alertes de securite (connexion suspecte, tentative de fraude) ne sont pas desactivables
+
+  - id: "a1b2c3d4-1111-4000-a000-000000000006"
+    title: Depot de cheque par photo
+    actor: client de la banque
+    action: deposer un cheque en le photographiant avec l'application
+    benefit: eviter de me deplacer en agence pour encaisser un cheque
+    priority: P2
+    acceptance_criteria:
+      - Le recto et le verso du cheque doivent etre photographies
+      - La reconnaissance OCR extrait automatiquement le montant et le nom de l'emetteur
+      - L'utilisateur valide ou corrige les informations extraites avant soumission
+      - Le montant maximum par depot photo est de 5 000 euros
+      - Le traitement du cheque prend 2 jours ouvrables apres soumission
+      - Un statut de traitement est visible dans l'historique (en cours, valide, rejete)
+      - En cas de rejet, le motif est communique et l'utilisateur peut resoumettre
+
+  - id: "a1b2c3d4-1111-4000-a000-000000000007"
+    title: Categorisation automatique des depenses
+    actor: client de la banque
+    action: visualiser mes depenses reparties par categorie avec des graphiques
+    benefit: comprendre ou va mon argent et mieux gerer mon budget mensuel
+    priority: P3
+    acceptance_criteria:
+      - Les operations sont classees automatiquement en 12 categories (alimentation, transport, logement, loisirs, sante, habillement, education, restaurant, abonnements, epargne, impots, divers)
+      - L'utilisateur peut recategoriser manuellement une operation et le systeme apprend pour les futures operations du meme commercant
+      - Un graphique camembert montre la repartition du mois en cours
+      - Un graphique barre compare les depenses mois par mois sur 6 mois
+      - Le budget mensuel par categorie est paramettrable avec alerte a 80% de consommation
+      - L'export PDF du bilan mensuel est disponible
+
+  - id: "a1b2c3d4-1111-4000-a000-000000000008"
+    title: Coffre-fort de documents bancaires
+    actor: client de la banque
+    action: consulter et telecharger mes documents bancaires depuis l'application
+    benefit: acceder a mes releves, contrats et attestations sans attendre le courrier postal
+    priority: P3
+    acceptance_criteria:
+      - Les releves de compte mensuels sont disponibles des le 5 du mois suivant
+      - Les attestations (domiciliation, solde) sont generables a la demande en format PDF
+      - Le RIB/IBAN est telechargeable et partageable en un tap
+      - Les contrats signes electroniquement sont archives et consultables
+      - Les documents sont conserves pendant 10 ans conformement a la reglementation
+      - La recherche par type de document et par date fonctionne
+      - Le telechargement est protege par la biometrie ou le code PIN
+
+  - id: "a1b2c3d4-1111-4000-a000-000000000009"
+    title: Contact conseiller par chat
+    actor: client de la banque
+    action: contacter mon conseiller bancaire via un chat integre dans l'application
+    benefit: obtenir des reponses rapides sans devoir me deplacer en agence ou attendre au telephone
+    priority: P3
+    acceptance_criteria:
+      - Le chat est disponible du lundi au vendredi de 8h30 a 18h30
+      - En dehors des horaires, un chatbot repond aux questions frequentes
+      - Le delai de premiere reponse du conseiller est inferieur a 5 minutes en moyenne
+      - L'utilisateur peut joindre un document ou une capture d'ecran au message
+      - L'historique des conversations est conserve et consultable
+      - Le conseiller peut partager un lien vers un produit ou un simulateur directement dans le chat
+      - Une notification push informe l'utilisateur quand le conseiller repond

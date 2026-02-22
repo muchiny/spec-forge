@@ -1,0 +1,44 @@
+{
+  "features": [
+    {
+      "name": "Recherche d'un livre par ISBN pour le bibliothecaire",
+      "description": "Le bibliothecaire recherche un livre par ISBN",
+      "tags": ["US-001", "P1"],
+      "source_scenario_ids": ["US-001"],
+      "covered_requirements": ["FR-001", "FR-002"],
+      "background": {
+        "steps": [
+          {"keyword": "Given", "text": "Un utilisateur est sur l'interface de recherche"}
+        ]
+      },
+      "scenarios": [
+        {
+          "name": "Recherche par ISBN valide",
+          "tags": ["happy_path", "FR-001"],
+          "scenario_type": "HappyPath",
+          "steps": [
+            {"keyword": "Given", "text": "Un catalogue de livres"},
+            {"keyword": "When", "text": "il saisit un ISBN valide"},
+            {"keyword": "Then", "text": "le livre est affiche en moins de 2 secondes"}
+          ],
+          "examples": {
+            "headers": ["isbn"],
+            "rows": [["978-3-16-148410-0"], ["0-521-63285-6"]]
+          },
+          "test_data_suggestions": []
+        },
+        {
+          "name": "Recherche par ISBN invalide",
+          "tags": ["edge_case", "FR-001"],
+          "scenario_type": "EdgeCase",
+          "steps": [
+            {"keyword": "Given", "text": "Un catalogue de livres"},
+            {"keyword": "When", "text": "il saisit un ISBN invalide"},
+            {"keyword": "Then", "text": "un message d'erreur est affiche"}
+          ],
+          "test_data_suggestions": []
+        }
+      ]
+    }
+  ]
+}

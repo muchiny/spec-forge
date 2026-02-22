@@ -1,0 +1,63 @@
+[package]
+name = "spec-forge"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.93.1"
+description = "Pipeline CLI pour transformer des User Stories en Specifications et Tests Gherkin/BDD via LLM"
+license = "MIT"
+
+[dependencies]
+# Async Runtime
+tokio = { version = "1", features = ["full"] }
+tokio-util = { version = "0.7", features = ["rt"] }
+async-trait = "0.1"
+
+# CLI
+clap = { version = "4", features = ["derive", "color", "suggestions"] }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+
+# Error handling
+thiserror = "2"
+anyhow = "1"
+
+# Logging & Tracing
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Configuration
+config = "0.15"
+
+# HTTP client (pour API LLM)
+reqwest = { version = "0.13", features = ["json"] }
+
+# Template rendering
+handlebars = "6"
+
+# Utils
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+regex = "1"
+
+# Terminal output
+console = "0.16"
+
+# TUI
+ratatui = "0.30"
+crossterm = "0.29"
+
+# Document parsing (PDF, DOCX)
+pdf-extract = "0.10"
+zip = "2"
+quick-xml = "0.39"
+
+[dev-dependencies]
+tokio-test = "0.4"
+tempfile = "3"
+wiremock = "0.6"
+pretty_assertions = "1"
+insta = "1"
+proptest = "1"

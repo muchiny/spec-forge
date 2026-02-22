@@ -1,0 +1,43 @@
+{
+  "user_scenarios": [
+    {
+      "id": "US-001",
+      "title": "Recherche par ISBN",
+      "priority": "P1",
+      "description": "Le bibliothecaire recherche un livre par ISBN",
+      "why_priority": "Fonctionnalite critique pour le personnel",
+      "independent_test": "Saisir un ISBN valide et verifier le resultat",
+      "acceptance_scenarios": [
+        {"given": "Un catalogue de livres", "when": "saisie d'un ISBN valide", "then": "le livre est affiche"}
+      ]
+    },
+    {
+      "id": "US-002",
+      "title": "Inscription en ligne",
+      "priority": "P1",
+      "description": "Le futur adherent s'inscrit en ligne",
+      "why_priority": "Augmente l'accessibilite",
+      "independent_test": "Remplir le formulaire et verifier l'email",
+      "acceptance_scenarios": [
+        {"given": "Le site web", "when": "soumission du formulaire", "then": "email de confirmation envoye"}
+      ]
+    }
+  ],
+  "functional_requirements": [
+    {"id": "FR-001", "statement": "Le systeme DOIT accepter les formats ISBN-10 et ISBN-13", "priority": "P1", "category": "Functional", "testable": true},
+    {"id": "FR-002", "statement": "Le systeme DOIT afficher les resultats en moins de 2 secondes", "priority": "P1", "category": "Functional", "testable": true},
+    {"id": "FR-003", "statement": "Le formulaire DOIT demander nom, prenom, email et adresse", "priority": "P1", "category": "Functional", "testable": true}
+  ],
+  "key_entities": [
+    {"name": "Livre", "description": "Un ouvrage de la bibliotheque", "attributes": ["ISBN", "titre", "auteur"]},
+    {"name": "Adherent", "description": "Un utilisateur inscrit", "attributes": ["nom", "prenom", "email"]}
+  ],
+  "edge_cases": [
+    {"description": "ISBN invalide ou mal forme", "severity": "P2"},
+    {"description": "Email deja utilise pour l'inscription", "severity": "P2"}
+  ],
+  "success_criteria": [
+    {"id": "SC-001", "description": "Recherche rapide", "measurable_metric": "Temps de reponse < 2s"}
+  ],
+  "clarifications_needed": []
+}

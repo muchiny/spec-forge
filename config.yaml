@@ -1,0 +1,41 @@
+pipeline:
+  max_retries: 2
+  default_language: "fr"
+  token_budget: 2000
+
+llm:
+  enabled: true
+  provider: "ollama"
+  model_name: "qwen3:8b"
+  api_base_url: "http://localhost:11434"
+  max_tokens: 16384
+  temperature: 0.1
+  timeout_secs: 300
+  # Taille du contexte (num_ctx) envoye a Ollama.
+  # Reduire economise de la VRAM (KV cache). 8192 suffit pour spec-forge.
+  # Qwen3:8B defaut=32768 → ~4 GB de KV cache ; 8192 → ~1 GB.
+  context_size: 8192
+
+templates:
+  directory: "templates"
+
+output:
+  spec_format: "markdown"
+  traceability: true
+  gherkin_language: "fr"
+
+validation:
+  min_coverage_percent: 80
+  validate_gherkin_syntax: true
+  max_clarifications: 3
+
+logging:
+  level: "info"
+  format: "text"
+  colors: true
+
+paths:
+  input_dir: "input"
+  output_dir: "output"
+  specs_dir: "output/specs"
+  features_dir: "output/features"

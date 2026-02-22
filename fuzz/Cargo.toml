@@ -1,0 +1,48 @@
+[package]
+name = "spec-forge-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+spec-forge = { path = ".." }
+zip = "2"
+serde_yaml = "0.9"
+serde_json = "1"
+
+[workspace]
+members = ["."]
+
+[[bin]]
+name = "fuzz_story_parser"
+path = "fuzz_targets/fuzz_story_parser.rs"
+doc = false
+
+[[bin]]
+name = "fuzz_clean_json"
+path = "fuzz_targets/fuzz_clean_json.rs"
+doc = false
+
+[[bin]]
+name = "fuzz_docx_xml"
+path = "fuzz_targets/fuzz_docx_xml.rs"
+doc = false
+
+[[bin]]
+name = "fuzz_docx_zip"
+path = "fuzz_targets/fuzz_docx_zip.rs"
+doc = false
+
+[[bin]]
+name = "fuzz_config_yaml"
+path = "fuzz_targets/fuzz_config_yaml.rs"
+doc = false
+
+[[bin]]
+name = "fuzz_validation"
+path = "fuzz_targets/fuzz_validation.rs"
+doc = false
