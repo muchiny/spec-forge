@@ -51,7 +51,7 @@ crossterm = "0.29"
 
 # Document parsing (PDF, DOCX)
 pdf-extract = "0.10"
-zip = "2"
+zip = "8"
 quick-xml = "0.39"
 
 [dev-dependencies]
