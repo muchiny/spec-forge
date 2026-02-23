@@ -1,0 +1,47 @@
+name: Fuzz
+
+on:
+  schedule:
+    - cron: "0 3 * * 1" # Chaque lundi à 3h UTC
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  fuzz:
+    name: Fuzz ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - fuzz_story_parser
+          - fuzz_clean_json
+          - fuzz_docx_xml
+          - fuzz_docx_zip
+          - fuzz_config_yaml
+          - fuzz_validation
+          - fuzz_template
+          - fuzz_traceability
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@nightly
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: fuzz
+
+      - name: Installer cargo-fuzz
+        run: cargo install cargo-fuzz --locked
+
+      - name: Lancer le fuzzing (${{ matrix.target }}, 60s)
+        run: cargo fuzz run ${{ matrix.target }} -- -max_total_time=60
+
+      - name: Upload artifacts en cas de crash
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-artifacts-${{ matrix.target }}
+          path: fuzz/artifacts/
