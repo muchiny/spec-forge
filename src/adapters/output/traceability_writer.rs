@@ -22,23 +22,26 @@ impl TraceabilityWriter {
         let matrix = build_traceability_matrix(spec, suite);
         let mut md = String::new();
 
-        writeln!(md, "# Matrice de Tracabilite").unwrap();
-        writeln!(md).unwrap();
-        writeln!(md, "**Specification**: {}", spec.title).unwrap();
-        writeln!(md, "**Date**: {}", spec.created_at.format("%Y-%m-%d")).unwrap();
-        writeln!(md, "**Version**: {}", spec.version).unwrap();
-        writeln!(md, "**Conformite**: ISO/IEC/IEEE 29148:2018 section 6.6").unwrap();
-        writeln!(md).unwrap();
+        // Ecriture en memoire (String) : ne peut pas echouer
+        _ = writeln!(md, "# Matrice de Tracabilite");
+        _ = writeln!(md);
+        _ = writeln!(md, "**Specification**: {}", spec.title);
+        _ = writeln!(md, "**Date**: {}", spec.created_at.format("%Y-%m-%d"));
+        _ = writeln!(md, "**Version**: {}", spec.version);
+        _ = writeln!(md, "**Conformite**: ISO/IEC/IEEE 29148:2018 section 6.6");
+        _ = writeln!(md);
 
         // Enriched traceability table
-        writeln!(md, "## Matrice de tracabilite exigences-tests").unwrap();
-        writeln!(md).unwrap();
-        writeln!(md, "| FR-ID | Priorite | Risque | Verification | Feature | Scenarios | Technique | Statut |").unwrap();
-        writeln!(
+        _ = writeln!(md, "## Matrice de tracabilite exigences-tests");
+        _ = writeln!(md);
+        _ = writeln!(
+            md,
+            "| FR-ID | Priorite | Risque | Verification | Feature | Scenarios | Technique | Statut |"
+        );
+        _ = writeln!(
             md,
             "|-------|----------|--------|-------------|---------|-----------|-----------|--------|"
-        )
-        .unwrap();
+        );
 
         for entry in &matrix.entries {
             let risk = entry
@@ -67,7 +70,7 @@ impl TraceabilityWriter {
                 _ => entry.status.to_string(),
             };
 
-            writeln!(
+            _ = writeln!(
                 md,
                 "| {} | {} | {} | {} | {} | {} | {} | {} |",
                 entry.requirement_id,
@@ -78,82 +81,74 @@ impl TraceabilityWriter {
                 scenario_count,
                 techniques,
                 status,
-            )
-            .unwrap();
+            );
         }
 
-        writeln!(md).unwrap();
+        _ = writeln!(md);
 
         // Resume de couverture
-        writeln!(md, "## Resume de couverture").unwrap();
-        writeln!(md).unwrap();
-        writeln!(
+        _ = writeln!(md, "## Resume de couverture");
+        _ = writeln!(md);
+        _ = writeln!(
             md,
             "- Exigences totales: {}",
             matrix.summary.total_requirements,
-        )
-        .unwrap();
-        writeln!(
+        );
+        _ = writeln!(
             md,
             "- Couvertes: {} | Partielles: {} | GAP: {} | Autre verification: {}",
             matrix.summary.covered,
             matrix.summary.partially_covered,
             matrix.summary.not_covered,
             matrix.summary.verified_other,
-        )
-        .unwrap();
-        writeln!(
+        );
+        _ = writeln!(
             md,
             "- Couverture forward: **{:.0}%**",
             matrix.summary.forward_coverage_pct,
-        )
-        .unwrap();
-        writeln!(
+        );
+        _ = writeln!(
             md,
             "- Scenarios happy path: {}",
             suite.coverage.scenarios_by_type.happy_path
-        )
-        .unwrap();
-        writeln!(
+        );
+        _ = writeln!(
             md,
             "- Scenarios edge case: {}",
             suite.coverage.scenarios_by_type.edge_case
-        )
-        .unwrap();
-        writeln!(
+        );
+        _ = writeln!(
             md,
             "- Scenarios erreur: {}",
             suite.coverage.scenarios_by_type.error_scenario
-        )
-        .unwrap();
-        writeln!(md, "- Total scenarios: {}", suite.total_scenarios).unwrap();
-        writeln!(md).unwrap();
+        );
+        _ = writeln!(md, "- Total scenarios: {}", suite.total_scenarios);
+        _ = writeln!(md);
 
         // Orphan tests
         if !matrix.summary.orphan_tests.is_empty() {
-            writeln!(md, "### Tests orphelins (sans exigence associee)").unwrap();
-            writeln!(md).unwrap();
+            _ = writeln!(md, "### Tests orphelins (sans exigence associee)");
+            _ = writeln!(md);
             for name in &matrix.summary.orphan_tests {
-                writeln!(md, "- {}", name).unwrap();
+                _ = writeln!(md, "- {}", name);
             }
-            writeln!(md).unwrap();
+            _ = writeln!(md);
         }
 
         // Compliance notes
         if !matrix.compliance_notes.is_empty() {
-            writeln!(md, "## Notes de conformite").unwrap();
-            writeln!(md).unwrap();
-            writeln!(md, "| Norme | Section | Statut | Details |").unwrap();
-            writeln!(md, "|-------|---------|--------|---------|").unwrap();
+            _ = writeln!(md, "## Notes de conformite");
+            _ = writeln!(md);
+            _ = writeln!(md, "| Norme | Section | Statut | Details |");
+            _ = writeln!(md, "|-------|---------|--------|---------|");
             for note in &matrix.compliance_notes {
-                writeln!(
+                _ = writeln!(
                     md,
                     "| {} | {} | {} | {} |",
                     note.standard, note.section, note.status, note.details,
-                )
-                .unwrap();
+                );
             }
-            writeln!(md).unwrap();
+            _ = writeln!(md);
         }
 
         md

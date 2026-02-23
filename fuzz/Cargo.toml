@@ -13,6 +13,7 @@ spec-forge = { path = ".." }
 zip = "2"
 serde_yaml = "0.9"
 serde_json = "1"
+handlebars = "6"
 
 [workspace]
 members = ["."]
@@ -45,4 +46,14 @@ doc = false
 [[bin]]
 name = "fuzz_validation"
 path = "fuzz_targets/fuzz_validation.rs"
+doc = false
+
+[[bin]]
+name = "fuzz_template"
+path = "fuzz_targets/fuzz_template.rs"
+doc = false
+
+[[bin]]
+name = "fuzz_traceability"
+path = "fuzz_targets/fuzz_traceability.rs"
 doc = false

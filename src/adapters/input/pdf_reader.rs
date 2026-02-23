@@ -62,3 +62,61 @@ impl InputReader for PdfReader {
         &["pdf"]
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pretty_assertions::assert_eq;
+    use std::io::Write;
+    use tempfile::NamedTempFile;
+
+    #[tokio::test]
+    async fn test_pdf_reader_fichier_inexistant() {
+        let reader = PdfReader::new();
+        let result = reader
+            .read_stories(Path::new("/tmp/inexistant_spec_forge_test.pdf"))
+            .await;
+        assert!(result.is_err(), "Fichier inexistant DOIT echouer");
+        assert!(matches!(
+            result.unwrap_err(),
+            InputError::FileNotFound { .. }
+        ));
+    }
+
+    #[tokio::test]
+    async fn test_pdf_reader_fichier_invalide() {
+        let mut temp = NamedTempFile::with_suffix(".pdf").unwrap();
+        temp.write_all(b"ceci n'est pas un PDF valide").unwrap();
+
+        let reader = PdfReader::new();
+        let result = reader.read_stories(temp.path()).await;
+        assert!(result.is_err(), "Contenu non-PDF DOIT echouer");
+        assert!(matches!(result.unwrap_err(), InputError::ParseError(_)));
+    }
+
+    #[test]
+    fn test_pdf_reader_supported_extensions() {
+        let reader = PdfReader::new();
+        assert_eq!(reader.supported_extensions(), &["pdf"]);
+    }
+
+    #[test]
+    fn test_pdf_reader_detect_language_french() {
+        let reader = PdfReader::new();
+        let lang = reader.detect_language("En tant que utilisateur, je veux me connecter");
+        assert_eq!(lang, Language::French);
+    }
+
+    #[test]
+    fn test_pdf_reader_detect_language_english() {
+        let reader = PdfReader::new();
+        let lang = reader.detect_language("As a user, I want to login");
+        assert_eq!(lang, Language::English);
+    }
+
+    #[test]
+    fn test_pdf_reader_default() {
+        let _reader = PdfReader;
+        // Verification que Default fonctionne sans panic
+    }
+}

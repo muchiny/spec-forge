@@ -53,12 +53,12 @@ impl MockLlmAdapter {
 
     /// Retourne le nombre d'appels effectues
     pub fn call_count(&self) -> usize {
-        *self.call_count.lock().unwrap()
+        *self.call_count.lock().expect("mutex empoisonne")
     }
 
     fn next_response(&self) -> LlmResponse {
-        let mut count = self.call_count.lock().unwrap();
-        let responses = self.responses.lock().unwrap();
+        let mut count = self.call_count.lock().expect("mutex empoisonne");
+        let responses = self.responses.lock().expect("mutex empoisonne");
         let idx = *count % responses.len();
         *count += 1;
         responses[idx].clone()
@@ -107,6 +107,7 @@ impl LlmService for MockLlmAdapter {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[tokio::test]
     async fn test_mock_adapter_returns_responses() {

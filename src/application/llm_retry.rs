@@ -119,6 +119,7 @@ mod tests {
     use super::*;
     use crate::adapters::llm::mock_adapter::MockLlmAdapter;
     use crate::ports::llm_service::LlmResponse;
+    use pretty_assertions::assert_eq;
 
     #[tokio::test]
     async fn test_call_with_retry_succes() {
@@ -175,7 +176,191 @@ mod tests {
 
         let result: Result<Strict, _> = call_with_retry(&adapter, "sys", "usr", 1, None).await;
 
-        assert!(result.is_err());
+        assert!(
+            result.is_err(),
+            "Aurait du echouer apres epuisement des retries"
+        );
         assert!(matches!(result.unwrap_err(), LlmRetryError::Failed { .. }));
+    }
+
+    #[tokio::test]
+    async fn test_retry_succes_deuxieme_tentative() {
+        // Premiere reponse : JSON invalide, deuxieme : valide
+        let adapter = MockLlmAdapter::with_responses(vec![
+            LlmResponse {
+                content: "pas du json".into(),
+                tokens_used: 10,
+                finish_reason: FinishReason::Stop,
+            },
+            LlmResponse {
+                content: r#"{"value": 42}"#.into(),
+                tokens_used: 15,
+                finish_reason: FinishReason::Stop,
+            },
+        ]);
+
+        let result: Result<serde_json::Value, _> =
+            call_with_retry(&adapter, "sys", "usr", 1, None).await;
+
+        assert!(
+            result.is_ok(),
+            "Aurait du reussir au 2e essai: {:?}",
+            result.err()
+        );
+        assert_eq!(result.unwrap()["value"], 42);
+        assert_eq!(adapter.call_count(), 2);
+    }
+
+    #[tokio::test]
+    async fn test_retry_epuise_max_tentatives() {
+        // Toutes les reponses sont invalides
+        let adapter = MockLlmAdapter::with_responses(vec![LlmResponse {
+            content: "invalide".into(),
+            tokens_used: 10,
+            finish_reason: FinishReason::Stop,
+        }]);
+
+        #[derive(Debug, serde::Deserialize)]
+        struct Strict {
+            #[allow(dead_code)]
+            field: String,
+        }
+
+        let result: Result<Strict, _> = call_with_retry(&adapter, "sys", "usr", 2, None).await;
+
+        assert!(result.is_err());
+        // 1 tentative initiale + 2 retries = 3 appels
+        assert_eq!(adapter.call_count(), 3);
+    }
+
+    #[tokio::test]
+    async fn test_retry_troncature_arrete_immediatement() {
+        // FinishReason::Length ne doit PAS declencher de retry
+        let adapter = MockLlmAdapter::with_responses(vec![
+            LlmResponse {
+                content: r#"{"value": 1}"#.into(),
+                tokens_used: 100,
+                finish_reason: FinishReason::Length,
+            },
+            LlmResponse {
+                content: r#"{"value": 2}"#.into(),
+                tokens_used: 50,
+                finish_reason: FinishReason::Stop,
+            },
+        ]);
+
+        let result: Result<serde_json::Value, _> =
+            call_with_retry(&adapter, "sys", "usr", 3, None).await;
+
+        assert!(result.is_err());
+        assert!(matches!(
+            result.unwrap_err(),
+            LlmRetryError::Truncated { .. }
+        ));
+        // Un seul appel — pas de retry apres troncature
+        assert_eq!(adapter.call_count(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_retry_validation_fn_rejecte_puis_accepte() {
+        let adapter = MockLlmAdapter::with_responses(vec![
+            LlmResponse {
+                content: r#"{"count": 0}"#.into(),
+                tokens_used: 10,
+                finish_reason: FinishReason::Stop,
+            },
+            LlmResponse {
+                content: r#"{"count": 5}"#.into(),
+                tokens_used: 15,
+                finish_reason: FinishReason::Stop,
+            },
+        ]);
+
+        // Validate_fn rejette si count < 1
+        let validate: &ValidateFn<serde_json::Value> = &|val, _attempt, _max| {
+            if val["count"].as_i64().unwrap_or(0) < 1 {
+                Some("count doit etre >= 1".into())
+            } else {
+                None
+            }
+        };
+
+        let result: Result<serde_json::Value, _> =
+            call_with_retry(&adapter, "sys", "usr", 2, Some(validate)).await;
+
+        assert!(
+            result.is_ok(),
+            "Aurait du reussir au 2e essai: {:?}",
+            result.err()
+        );
+        assert_eq!(result.unwrap()["count"], 5);
+        assert_eq!(adapter.call_count(), 2);
+    }
+
+    #[tokio::test]
+    async fn test_retry_validation_fn_rejette_toujours() {
+        let adapter = MockLlmAdapter::with_responses(vec![LlmResponse {
+            content: r#"{"count": 0}"#.into(),
+            tokens_used: 10,
+            finish_reason: FinishReason::Stop,
+        }]);
+
+        let validate: &ValidateFn<serde_json::Value> =
+            &|_val, _attempt, _max| Some("toujours rejete".into());
+
+        let result: Result<serde_json::Value, _> =
+            call_with_retry(&adapter, "sys", "usr", 1, Some(validate)).await;
+
+        assert!(result.is_err());
+        if let Err(LlmRetryError::Failed { details }) = result {
+            assert!(
+                details.contains("toujours rejete"),
+                "Le message devrait contenir la raison du rejet: {details}"
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn test_retry_json_invalide_puis_valide() {
+        // Code block wrapping puis JSON propre
+        let adapter = MockLlmAdapter::with_responses(vec![
+            LlmResponse {
+                content: "```json\nbroken json here\n```".into(),
+                tokens_used: 10,
+                finish_reason: FinishReason::Stop,
+            },
+            LlmResponse {
+                content: r#"{"status": "ok"}"#.into(),
+                tokens_used: 12,
+                finish_reason: FinishReason::Stop,
+            },
+        ]);
+
+        let result: Result<serde_json::Value, _> =
+            call_with_retry(&adapter, "sys", "usr", 2, None).await;
+
+        assert!(result.is_ok(), "Aurait du reussir: {:?}", result.err());
+        assert_eq!(result.unwrap()["status"], "ok");
+    }
+
+    #[tokio::test]
+    async fn test_retry_zero_max_retries() {
+        // max_retries = 0 signifie une seule tentative
+        let adapter = MockLlmAdapter::with_responses(vec![LlmResponse {
+            content: "pas json".into(),
+            tokens_used: 10,
+            finish_reason: FinishReason::Stop,
+        }]);
+
+        #[derive(Debug, serde::Deserialize)]
+        struct S {
+            #[allow(dead_code)]
+            x: i32,
+        }
+
+        let result: Result<S, _> = call_with_retry(&adapter, "sys", "usr", 0, None).await;
+
+        assert!(result.is_err());
+        assert_eq!(adapter.call_count(), 1);
     }
 }

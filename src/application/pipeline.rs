@@ -318,6 +318,7 @@ impl Pipeline {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
     use std::fs;
     use tempfile::TempDir;
 
@@ -327,7 +328,7 @@ mod tests {
         let file = dir.path().join("story.md");
         fs::write(&file, "# US").unwrap();
 
-        let result = Pipeline::expand_paths(&[file.clone()]).unwrap();
+        let result = Pipeline::expand_paths(std::slice::from_ref(&file)).unwrap();
         assert_eq!(result, vec![file]);
     }
 

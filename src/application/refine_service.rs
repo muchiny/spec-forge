@@ -402,7 +402,8 @@ impl RefineService {
             return Specification::new("Empty".to_string());
         }
         if specs.len() == 1 {
-            return specs.into_iter().next().unwrap();
+            // len() == 1 verifie ci-dessus, next() ne peut pas etre None
+            return specs.into_iter().next().expect("specs.len() == 1");
         }
 
         let total_stories: usize = specs.iter().map(|s| s.source_stories.len()).sum();
@@ -914,6 +915,7 @@ fn validate_llm_spec_output(spec: &Specification) -> Vec<LlmValidationWarning> {
 mod tests {
     use super::*;
     use crate::domain::user_story::Priority;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_clean_json_response() {
@@ -1530,6 +1532,153 @@ That's all."#;
         assert_eq!(output.key_entities[0].description, "");
         assert_eq!(output.edge_cases[0].description, "");
         assert_eq!(output.success_criteria[0].description, "");
+    }
+
+    // -----------------------------------------------------------------------
+    // Tests edge cases supplementaires
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_deserialize_unicode_in_statement() {
+        let json = r#"{
+            "user_scenarios": [],
+            "functional_requirements": [{
+                "id": "FR-001",
+                "statement": "Le système DOIT gérer les caractères spéciaux: é, è, ü, ñ, 日本語",
+                "priority": "P1",
+                "category": "Functional",
+                "testable": true
+            }],
+            "key_entities": [],
+            "edge_cases": [],
+            "success_criteria": [],
+            "clarifications_needed": []
+        }"#;
+        let result: Result<LlmRefineOutput, _> = serde_json::from_str(json);
+        assert!(
+            result.is_ok(),
+            "Parsing avec unicode DOIT reussir: {:?}",
+            result.err()
+        );
+        let output = result.unwrap();
+        assert!(
+            output.functional_requirements[0]
+                .statement
+                .contains("日本語")
+        );
+    }
+
+    #[test]
+    fn test_deserialize_extra_unknown_fields() {
+        let json = r#"{
+            "user_scenarios": [],
+            "functional_requirements": [],
+            "key_entities": [],
+            "edge_cases": [],
+            "success_criteria": [],
+            "clarifications_needed": [],
+            "champ_inconnu": "valeur",
+            "autre_champ": 42
+        }"#;
+        let result: Result<LlmRefineOutput, _> = serde_json::from_str(json);
+        assert!(
+            result.is_ok(),
+            "Les champs inconnus doivent etre ignores: {:?}",
+            result.err()
+        );
+    }
+
+    #[test]
+    fn test_deserialize_empty_functional_requirements() {
+        let json = r#"{
+            "user_scenarios": [],
+            "functional_requirements": [],
+            "key_entities": [],
+            "edge_cases": [],
+            "success_criteria": [],
+            "clarifications_needed": []
+        }"#;
+        let result: Result<LlmRefineOutput, _> = serde_json::from_str(json);
+        assert!(
+            result.is_ok(),
+            "Spec sans FR DOIT etre valide: {:?}",
+            result.err()
+        );
+        assert!(result.unwrap().functional_requirements.is_empty());
+    }
+
+    #[test]
+    fn test_merge_specs_many() {
+        // Merge de 10 specs — verifier la performance et la coherence
+        let specs: Vec<Specification> = (0..10)
+            .map(|i| {
+                let mut spec = Specification::new(format!("Spec {i}"));
+                spec.functional_requirements.push(make_fr(
+                    "FR-001",
+                    &format!("DOIT {i}"),
+                    Priority::P2,
+                ));
+                spec.user_scenarios.push(make_us("US-001"));
+                spec
+            })
+            .collect();
+
+        let merged = RefineService::merge_specifications(specs);
+        assert_eq!(merged.functional_requirements.len(), 10);
+        assert_eq!(merged.user_scenarios.len(), 10);
+
+        // Verifier IDs uniques
+        let fr_ids: Vec<&str> = merged
+            .functional_requirements
+            .iter()
+            .map(|f| f.id.as_str())
+            .collect();
+        let unique: std::collections::HashSet<&str> = fr_ids.iter().copied().collect();
+        assert_eq!(
+            fr_ids.len(),
+            unique.len(),
+            "Tous les FR IDs doivent etre uniques"
+        );
+    }
+
+    #[test]
+    fn test_validate_clean_spec() {
+        let mut spec = Specification::new("Test".into());
+        spec.functional_requirements.push(FunctionalRequirement {
+            id: "FR-001".into(),
+            statement: "Le systeme DOIT verifier l'identite de l'utilisateur".into(),
+            priority: Priority::P1,
+            category: RequirementCategory::Functional,
+            testable: true,
+            rationale: Some("Securite".into()),
+            source: Some("US-001".into()),
+            verification_method: VerificationMethod::Test,
+            risk_level: Some(crate::domain::specification::RiskLevel::High),
+            parent_requirement: None,
+            allocated_to: vec!["Auth".into()],
+            quality_characteristic: Some(
+                crate::domain::specification::QualityCharacteristic::Security,
+            ),
+        });
+        spec.user_scenarios.push(make_us("US-001"));
+        spec.user_scenarios[0]
+            .acceptance_scenarios
+            .push(AcceptanceScenario {
+                given: "un utilisateur enregistre".into(),
+                when: "il saisit ses identifiants".into(),
+                then: "il est connecte".into(),
+            });
+
+        let warnings = validate_llm_spec_output(&spec);
+        let errors: Vec<_> = warnings
+            .iter()
+            .filter(|w| w.severity == WarningSeverity::Error)
+            .collect();
+        assert!(
+            errors.is_empty(),
+            "Aucune erreur attendue pour une spec propre, obtenu: {:?}",
+            errors
+        );
     }
 
     mod proptest_suite {

@@ -65,6 +65,7 @@ impl InputReader for YamlReader {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
     use std::io::Write;
     use tempfile::NamedTempFile;
 
@@ -100,5 +101,53 @@ stories:
         let reader = YamlReader::new();
         let result = reader.read_stories(Path::new("/nonexistent.yaml")).await;
         assert!(matches!(result, Err(InputError::FileNotFound { .. })));
+    }
+
+    #[tokio::test]
+    async fn test_read_yaml_invalid_syntax() {
+        let mut file = NamedTempFile::with_suffix(".yaml").unwrap();
+        write!(file, "ceci: n'est: pas: du: yaml: [valide").unwrap();
+
+        let reader = YamlReader::new();
+        let result = reader.read_stories(file.path()).await;
+        assert!(result.is_err(), "YAML invalide DOIT echouer");
+        assert!(
+            matches!(result.unwrap_err(), InputError::InvalidFormat { .. }),
+            "Attendu InvalidFormat"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_read_yaml_empty_stories() {
+        let yaml_content = r#"
+language: fr
+stories: []
+"#;
+        let mut file = NamedTempFile::with_suffix(".yaml").unwrap();
+        write!(file, "{}", yaml_content).unwrap();
+
+        let reader = YamlReader::new();
+        let result = reader.read_stories(file.path()).await;
+        assert!(result.is_err(), "Stories vides DOIT echouer");
+        assert!(matches!(result.unwrap_err(), InputError::NoStoriesFound));
+    }
+
+    #[test]
+    fn test_yaml_reader_detect_language() {
+        let reader = YamlReader::new();
+        assert_eq!(reader.detect_language("language: en"), Language::English);
+        assert_eq!(reader.detect_language("language: fr"), Language::French);
+        assert_eq!(reader.detect_language("no language tag"), Language::French);
+    }
+
+    #[test]
+    fn test_yaml_reader_supported_extensions() {
+        let reader = YamlReader::new();
+        assert_eq!(reader.supported_extensions(), &["yaml", "yml"]);
+    }
+
+    #[test]
+    fn test_yaml_reader_default() {
+        let _reader = YamlReader;
     }
 }

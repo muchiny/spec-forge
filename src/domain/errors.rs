@@ -87,6 +87,7 @@ pub enum ValidationError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_input_error_display() {

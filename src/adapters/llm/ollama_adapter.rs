@@ -362,6 +362,7 @@ impl LlmService for OllamaAdapter {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_ollama_adapter_disabled() {
@@ -579,5 +580,120 @@ mod tests {
             !ready,
             "is_ready() doit retourner false si le serveur est injoignable"
         );
+    }
+
+    #[tokio::test]
+    async fn test_wiremock_generate_400_bad_request() {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/api/generate"))
+            .respond_with(ResponseTemplate::new(400).set_body_string("Bad Request: invalid model"))
+            .mount(&server)
+            .await;
+
+        let config = make_config_for_mock(&server.uri());
+        let adapter = OllamaAdapter::new(config).unwrap();
+        let result = adapter.generate("test").await;
+        assert!(result.is_err(), "400 DOIT echouer");
+        match result.unwrap_err() {
+            LlmError::ApiError { status_code, .. } => assert_eq!(status_code, 400),
+            other => panic!("Attendu ApiError 400, obtenu: {:?}", other),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_wiremock_generate_429_rate_limit() {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/api/generate"))
+            .respond_with(ResponseTemplate::new(429).set_body_string("Too Many Requests"))
+            .mount(&server)
+            .await;
+
+        let config = make_config_for_mock(&server.uri());
+        let adapter = OllamaAdapter::new(config).unwrap();
+        let result = adapter.generate("test").await;
+        assert!(result.is_err(), "429 DOIT echouer");
+        match result.unwrap_err() {
+            LlmError::ApiError { status_code, .. } => assert_eq!(status_code, 429),
+            other => panic!("Attendu ApiError 429, obtenu: {:?}", other),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_wiremock_generate_response_vide() {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/api/generate"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "response": "",
+                "done": true,
+                "eval_count": 0,
+                "done_reason": "stop"
+            })))
+            .mount(&server)
+            .await;
+
+        let config = make_config_for_mock(&server.uri());
+        let adapter = OllamaAdapter::new(config).unwrap();
+        let result = adapter.generate("test").await;
+        assert!(
+            result.is_ok(),
+            "Reponse vide DOIT reussir: {:?}",
+            result.err()
+        );
+        let response = result.unwrap();
+        assert!(response.content.is_empty());
+        assert_eq!(response.tokens_used, 0);
+    }
+
+    #[tokio::test]
+    async fn test_wiremock_generate_json_avec_unicode() {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/api/generate"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "response": "{\"message\": \"Système prêt — données validées ✓\"}",
+                "done": true,
+                "eval_count": 25,
+                "done_reason": "stop"
+            })))
+            .mount(&server)
+            .await;
+
+        let config = make_config_for_mock(&server.uri());
+        let adapter = OllamaAdapter::new(config).unwrap();
+        let result = adapter.generate_json("sys", "usr").await;
+        assert!(result.is_ok(), "Unicode DOIT reussir: {:?}", result.err());
+        let response = result.unwrap();
+        assert!(response.content.contains("validées"));
+        assert!(response.content.contains("✓"));
+    }
+
+    #[tokio::test]
+    async fn test_wiremock_check_model_response_vide() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/api/tags"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "models": []
+            })))
+            .mount(&server)
+            .await;
+
+        let config = make_config_for_mock(&server.uri());
+        let adapter = OllamaAdapter::new(config).unwrap();
+        let found = adapter.check_model().await.unwrap();
+        assert!(!found, "Liste vide ne devrait pas trouver le modele");
+    }
+
+    #[test]
+    fn test_model_info() {
+        let config = LlmConfig::default();
+        let adapter = OllamaAdapter::new(config).unwrap();
+        let info = adapter.model_info();
+        assert_eq!(info.provider, "ollama");
+        assert_eq!(info.name, "qwen3:8b");
+        assert!(info.context_size.is_some());
     }
 }

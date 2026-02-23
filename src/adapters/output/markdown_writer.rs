@@ -17,87 +17,83 @@ impl MarkdownWriter {
     pub fn render_specification(&self, spec: &Specification) -> String {
         let mut md = String::new();
 
-        // Header
-        writeln!(md, "# Feature Specification: {}", spec.title).unwrap();
-        writeln!(md).unwrap();
-        writeln!(md, "**Created**: {}", spec.created_at.format("%Y-%m-%d")).unwrap();
-        writeln!(md, "**Status**: {}", spec.status).unwrap();
-        writeln!(md, "**Version**: {}", spec.version).unwrap();
-        writeln!(md, "**Tool**: spec-forge v{}", spec.tool_version).unwrap();
+        // Header — ecriture en memoire (String) : ne peut pas echouer
+        _ = writeln!(md, "# Feature Specification: {}", spec.title);
+        _ = writeln!(md);
+        _ = writeln!(md, "**Created**: {}", spec.created_at.format("%Y-%m-%d"));
+        _ = writeln!(md, "**Status**: {}", spec.status);
+        _ = writeln!(md, "**Version**: {}", spec.version);
+        _ = writeln!(md, "**Tool**: spec-forge v{}", spec.tool_version);
         if let Some(ref compliance) = spec.compliance_profile {
-            writeln!(md, "**Compliance**: {:?}", compliance).unwrap();
+            _ = writeln!(md, "**Compliance**: {:?}", compliance);
         }
-        writeln!(md).unwrap();
+        _ = writeln!(md);
 
         // User Scenarios
-        writeln!(md, "## User Scenarios & Testing").unwrap();
-        writeln!(md).unwrap();
+        _ = writeln!(md, "## User Scenarios & Testing");
+        _ = writeln!(md);
 
         for scenario in &spec.user_scenarios {
-            writeln!(
+            _ = writeln!(
                 md,
                 "### {} - {} (Priority: {})",
                 scenario.id, scenario.title, scenario.priority
-            )
-            .unwrap();
-            writeln!(md).unwrap();
-            writeln!(md, "{}", scenario.description).unwrap();
-            writeln!(md).unwrap();
-            writeln!(md, "**Why this priority**: {}", scenario.why_priority).unwrap();
-            writeln!(md).unwrap();
-            writeln!(md, "**Independent Test**: {}", scenario.independent_test).unwrap();
-            writeln!(md).unwrap();
-            writeln!(md, "**Acceptance Scenarios**:").unwrap();
-            writeln!(md).unwrap();
+            );
+            _ = writeln!(md);
+            _ = writeln!(md, "{}", scenario.description);
+            _ = writeln!(md);
+            _ = writeln!(md, "**Why this priority**: {}", scenario.why_priority);
+            _ = writeln!(md);
+            _ = writeln!(md, "**Independent Test**: {}", scenario.independent_test);
+            _ = writeln!(md);
+            _ = writeln!(md, "**Acceptance Scenarios**:");
+            _ = writeln!(md);
 
             for (i, ac) in scenario.acceptance_scenarios.iter().enumerate() {
-                writeln!(
+                _ = writeln!(
                     md,
                     "{}. **Given** {}, **When** {}, **Then** {}",
                     i + 1,
                     ac.given,
                     ac.when,
                     ac.then
-                )
-                .unwrap();
+                );
             }
-            writeln!(md).unwrap();
-            writeln!(md, "---").unwrap();
-            writeln!(md).unwrap();
+            _ = writeln!(md);
+            _ = writeln!(md, "---");
+            _ = writeln!(md);
         }
 
         // Edge Cases
         if !spec.edge_cases.is_empty() {
-            writeln!(md, "### Edge Cases").unwrap();
-            writeln!(md).unwrap();
+            _ = writeln!(md, "### Edge Cases");
+            _ = writeln!(md);
             for ec in &spec.edge_cases {
-                write!(md, "- {}", ec.description).unwrap();
+                _ = write!(md, "- {}", ec.description);
                 if let Some(ref related) = ec.related_scenario {
-                    write!(md, " (lie a: {})", related).unwrap();
+                    _ = write!(md, " (lie a: {})", related);
                 }
-                writeln!(md).unwrap();
+                _ = writeln!(md);
             }
-            writeln!(md).unwrap();
+            _ = writeln!(md);
         }
 
         // Functional Requirements
-        writeln!(md, "## Requirements").unwrap();
-        writeln!(md).unwrap();
-        writeln!(md, "### Functional Requirements").unwrap();
-        writeln!(md).unwrap();
+        _ = writeln!(md, "## Requirements");
+        _ = writeln!(md);
+        _ = writeln!(md, "### Functional Requirements");
+        _ = writeln!(md);
 
-        writeln!(
+        _ = writeln!(
             md,
             "| ID | Enonce | Priorite | Categorie | Verification | Risque |"
-        )
-        .unwrap();
-        writeln!(
+        );
+        _ = writeln!(
             md,
             "|---|--------|----------|-----------|-------------|--------|"
-        )
-        .unwrap();
+        );
         for fr in &spec.functional_requirements {
-            writeln!(
+            _ = writeln!(
                 md,
                 "| {} | {} | {} | {} | {} | {} |",
                 fr.id,
@@ -109,18 +105,17 @@ impl MarkdownWriter {
                     .as_ref()
                     .map(|r| r.to_string())
                     .unwrap_or_else(|| "-".into()),
-            )
-            .unwrap();
+            );
         }
-        writeln!(md).unwrap();
+        _ = writeln!(md);
 
         // FR details (rationale, source) if present
         let has_details = spec.functional_requirements.iter().any(|fr| {
             fr.rationale.is_some() || fr.source.is_some() || fr.quality_characteristic.is_some()
         });
         if has_details {
-            writeln!(md, "#### Details des exigences").unwrap();
-            writeln!(md).unwrap();
+            _ = writeln!(md, "#### Details des exigences");
+            _ = writeln!(md);
             for fr in &spec.functional_requirements {
                 let mut details = Vec::new();
                 if let Some(ref r) = fr.rationale {
@@ -133,84 +128,80 @@ impl MarkdownWriter {
                     details.push(format!("Qualite ISO 25010: {}", qc));
                 }
                 if !details.is_empty() {
-                    writeln!(md, "- **{}**: {}", fr.id, details.join(" | ")).unwrap();
+                    _ = writeln!(md, "- **{}**: {}", fr.id, details.join(" | "));
                 }
             }
-            writeln!(md).unwrap();
+            _ = writeln!(md);
         }
 
         // Key Entities
         if !spec.key_entities.is_empty() {
-            writeln!(md, "### Key Entities").unwrap();
-            writeln!(md).unwrap();
+            _ = writeln!(md, "### Key Entities");
+            _ = writeln!(md);
             for entity in &spec.key_entities {
-                writeln!(md, "- **{}**: {}", entity.name, entity.description).unwrap();
+                _ = writeln!(md, "- **{}**: {}", entity.name, entity.description);
                 for attr in &entity.attributes {
-                    writeln!(md, "  - {}", attr).unwrap();
+                    _ = writeln!(md, "  - {}", attr);
                 }
             }
-            writeln!(md).unwrap();
+            _ = writeln!(md);
         }
 
         // Success Criteria
-        writeln!(md, "## Success Criteria").unwrap();
-        writeln!(md).unwrap();
-        writeln!(md, "### Measurable Outcomes").unwrap();
-        writeln!(md).unwrap();
+        _ = writeln!(md, "## Success Criteria");
+        _ = writeln!(md);
+        _ = writeln!(md, "### Measurable Outcomes");
+        _ = writeln!(md);
 
         for sc in &spec.success_criteria {
-            writeln!(
+            _ = writeln!(
                 md,
                 "- **{}**: {} (Metrique: {})",
                 sc.id, sc.description, sc.measurable_metric
-            )
-            .unwrap();
+            );
         }
-        writeln!(md).unwrap();
+        _ = writeln!(md);
 
         // Clarifications
         if !spec.clarifications_needed.is_empty() {
-            writeln!(md, "## Clarifications").unwrap();
-            writeln!(md).unwrap();
+            _ = writeln!(md, "## Clarifications");
+            _ = writeln!(md);
             for cl in &spec.clarifications_needed {
                 if cl.resolved {
-                    writeln!(
+                    _ = writeln!(
                         md,
                         "- **Q**: {} -> **A**: {}",
                         cl.question,
                         cl.answer.as_deref().unwrap_or("N/A")
-                    )
-                    .unwrap();
+                    );
                 } else {
-                    writeln!(md, "- **[NEEDS CLARIFICATION]**: {}", cl.question).unwrap();
-                    writeln!(md, "  - Contexte: {}", cl.context).unwrap();
-                    writeln!(md, "  - Impact: {}", cl.impact).unwrap();
+                    _ = writeln!(md, "- **[NEEDS CLARIFICATION]**: {}", cl.question);
+                    _ = writeln!(md, "  - Contexte: {}", cl.context);
+                    _ = writeln!(md, "  - Impact: {}", cl.impact);
                     if !cl.suggested_options.is_empty() {
-                        writeln!(md, "  - Options: {}", cl.suggested_options.join(", ")).unwrap();
+                        _ = writeln!(md, "  - Options: {}", cl.suggested_options.join(", "));
                     }
                 }
             }
-            writeln!(md).unwrap();
+            _ = writeln!(md);
         }
 
         // Validation
         if let Some(ref validation) = spec.validation {
-            writeln!(md, "## Validation").unwrap();
-            writeln!(md).unwrap();
-            writeln!(
+            _ = writeln!(md, "## Validation");
+            _ = writeln!(md);
+            _ = writeln!(
                 md,
                 "- Completude: {:.0}%",
                 validation.completeness_score * 100.0
-            )
-            .unwrap();
-            writeln!(md, "- Clarte: {:.0}%", validation.clarity_score * 100.0).unwrap();
-            writeln!(
+            );
+            _ = writeln!(md, "- Clarte: {:.0}%", validation.clarity_score * 100.0);
+            _ = writeln!(
                 md,
                 "- Testabilite: {:.0}%",
                 validation.testability_score * 100.0
-            )
-            .unwrap();
-            writeln!(md).unwrap();
+            );
+            _ = writeln!(md);
         }
 
         md

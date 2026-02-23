@@ -61,6 +61,7 @@ impl InputReader for MarkdownReader {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_detect_language_french() {

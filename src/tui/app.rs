@@ -299,7 +299,7 @@ impl App {
         }
     }
 
-    /// Applique un PipelineEvent a l'etat
+    /// Applique un PipelineEvent a l'etat de l'application
     pub fn handle_pipeline_event(&mut self, event: PipelineEvent) {
         use crate::application::pipeline_events::PipelineStage;
 
@@ -375,5 +375,275 @@ impl App {
                 self.screen = Screen::SpecViewer;
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::adapters::llm::mock_adapter::MockLlmAdapter;
+    use crate::adapters::templates::file_template_engine::FileTemplateEngine;
+    use crate::application::pipeline_events::{PipelineEvent, PipelineStage};
+    use crate::domain::specification::Specification;
+    use crate::domain::test_case::*;
+    use pretty_assertions::assert_eq;
+    use std::path::PathBuf;
+
+    fn make_test_app() -> App {
+        let config = Config::default();
+        let llm: Arc<dyn crate::ports::llm_service::LlmService> =
+            Arc::new(MockLlmAdapter::new(vec!["{}".into()]));
+        let templates: Arc<dyn crate::ports::template_engine::TemplateEngine> = Arc::new(
+            FileTemplateEngine::new(std::path::Path::new("templates")).expect("templates dir"),
+        );
+        let pipeline = Arc::new(Pipeline::new(llm, templates, config.clone()));
+        App::new(config, pipeline)
+    }
+
+    #[test]
+    fn test_screen_labels() {
+        assert_eq!(Screen::Dashboard.label(), "Accueil");
+        assert_eq!(Screen::FilePicker.label(), "Fichier");
+        assert_eq!(Screen::Pipeline.label(), "Pipeline");
+        assert_eq!(Screen::SpecViewer.label(), "Spec");
+        assert_eq!(Screen::GherkinViewer.label(), "Gherkin");
+        assert_eq!(Screen::Traceability.label(), "Tracabilite");
+        assert_eq!(Screen::Config.label(), "Config");
+        assert_eq!(Screen::Logs.label(), "Journaux");
+    }
+
+    #[test]
+    fn test_screen_keys() {
+        assert_eq!(Screen::Dashboard.key(), "1");
+        assert_eq!(Screen::Logs.key(), "8");
+    }
+
+    #[test]
+    fn test_screen_all() {
+        let all = Screen::all();
+        assert_eq!(all.len(), 8);
+        assert_eq!(all[0], Screen::Dashboard);
+        assert_eq!(all[7], Screen::Logs);
+    }
+
+    #[test]
+    fn test_pipeline_state_default() {
+        let state = PipelineState::default();
+        assert_eq!(state.status, PipelineStatus::Idle);
+        assert!(matches!(state.reading, PipelineStageState::Pending));
+        assert!(matches!(state.refining, PipelineStageState::Pending));
+        assert!(matches!(state.generating, PipelineStageState::Pending));
+        assert!(matches!(state.writing, PipelineStageState::Pending));
+        assert_eq!(state.tokens_used, 0);
+        assert!(state.logs.is_empty());
+    }
+
+    #[test]
+    fn test_pipeline_state_reset() {
+        let mut state = PipelineState {
+            status: PipelineStatus::Running,
+            reading: PipelineStageState::Done,
+            tokens_used: 500,
+            ..Default::default()
+        };
+        state.logs.push("test".into());
+
+        state.reset();
+
+        assert_eq!(state.status, PipelineStatus::Idle);
+        assert!(matches!(state.reading, PipelineStageState::Pending));
+        assert_eq!(state.tokens_used, 0);
+        assert!(state.logs.is_empty());
+    }
+
+    #[test]
+    fn test_progress_percent() {
+        let mut state = PipelineState::default();
+        assert_eq!(state.progress_percent(), 0);
+
+        state.reading = PipelineStageState::Done;
+        assert_eq!(state.progress_percent(), 25);
+
+        state.refining = PipelineStageState::Done;
+        assert_eq!(state.progress_percent(), 50);
+
+        state.generating = PipelineStageState::Done;
+        assert_eq!(state.progress_percent(), 75);
+
+        state.writing = PipelineStageState::Done;
+        assert_eq!(state.progress_percent(), 100);
+    }
+
+    #[test]
+    fn test_progress_running_not_counted() {
+        let state = PipelineState {
+            reading: PipelineStageState::Running,
+            ..Default::default()
+        };
+        assert_eq!(
+            state.progress_percent(),
+            0,
+            "Running ne compte pas comme Done"
+        );
+    }
+
+    #[test]
+    fn test_elapsed_secs_without_start() {
+        let state = PipelineState::default();
+        assert_eq!(state.elapsed_secs(), 0);
+    }
+
+    #[test]
+    fn test_app_initial_state() {
+        let app = make_test_app();
+        assert_eq!(app.screen, Screen::Dashboard);
+        assert!(!app.show_help);
+        assert!(!app.should_quit);
+        assert!(app.spec.is_none());
+        assert!(app.test_suite.is_none());
+        assert!(app.logs.is_empty());
+        assert_eq!(app.llm_status, LlmStatus::Unknown);
+        assert_eq!(app.pipeline_state.status, PipelineStatus::Idle);
+    }
+
+    #[test]
+    fn test_add_log() {
+        let mut app = make_test_app();
+        app.add_log(LogLevel::Info, "Test message".into());
+
+        assert_eq!(app.logs.len(), 1);
+        assert_eq!(app.logs[0].level, LogLevel::Info);
+        assert_eq!(app.logs[0].message, "Test message");
+        assert!(!app.logs[0].timestamp.is_empty());
+    }
+
+    #[test]
+    fn test_add_log_cap() {
+        let mut app = make_test_app();
+        for i in 0..5010 {
+            app.add_log(LogLevel::Info, format!("Log {i}"));
+        }
+        assert!(
+            app.logs.len() <= App::MAX_LOGS,
+            "Logs ne doivent pas depasser MAX_LOGS"
+        );
+    }
+
+    #[test]
+    fn test_handle_stage_started() {
+        let mut app = make_test_app();
+        app.pipeline_state.status = PipelineStatus::Running;
+
+        app.handle_pipeline_event(PipelineEvent::StageStarted(PipelineStage::ReadingInput));
+        assert!(matches!(
+            app.pipeline_state.reading,
+            PipelineStageState::Running
+        ));
+    }
+
+    #[test]
+    fn test_handle_stage_completed() {
+        let mut app = make_test_app();
+        app.pipeline_state.status = PipelineStatus::Running;
+
+        app.handle_pipeline_event(PipelineEvent::StageCompleted(PipelineStage::RefiningSpec));
+        assert!(matches!(
+            app.pipeline_state.refining,
+            PipelineStageState::Done
+        ));
+    }
+
+    #[test]
+    fn test_handle_progress_message() {
+        let mut app = make_test_app();
+        app.handle_pipeline_event(PipelineEvent::Progress {
+            stage: PipelineStage::GeneratingTests,
+            message: "Batch 2/3".into(),
+        });
+        assert_eq!(app.pipeline_state.progress_message, "Batch 2/3");
+    }
+
+    #[test]
+    fn test_handle_llm_tokens() {
+        let mut app = make_test_app();
+        app.pipeline_state.status = PipelineStatus::Running;
+
+        app.handle_pipeline_event(PipelineEvent::LlmCallCompleted {
+            response_tokens: 500,
+            elapsed_ms: 2000,
+        });
+        assert_eq!(app.pipeline_state.tokens_used, 500);
+
+        app.handle_pipeline_event(PipelineEvent::LlmCallCompleted {
+            response_tokens: 300,
+            elapsed_ms: 1500,
+        });
+        assert_eq!(app.pipeline_state.tokens_used, 800);
+    }
+
+    #[test]
+    fn test_handle_error_sets_status() {
+        let mut app = make_test_app();
+        app.handle_pipeline_event(PipelineEvent::Error("Echec LLM".into()));
+        assert_eq!(app.pipeline_state.status, PipelineStatus::Error);
+    }
+
+    #[test]
+    fn test_handle_file_written() {
+        let mut app = make_test_app();
+        app.pipeline_state.status = PipelineStatus::Running;
+        app.handle_pipeline_event(PipelineEvent::FileWritten {
+            path: PathBuf::from("/tmp/test.md"),
+        });
+        assert!(app.logs.iter().any(|l| l.message.contains("/tmp/test.md")));
+    }
+
+    #[test]
+    fn test_handle_completed_switches_screen() {
+        let mut app = make_test_app();
+        let spec = Box::new(Specification::new("Test".into()));
+        let suite = Box::new(TestSuite {
+            features: vec![],
+            source_spec_id: spec.id,
+            total_scenarios: 0,
+            coverage: TestCoverage {
+                requirements_covered: vec![],
+                requirements_total: 0,
+                coverage_percentage: 0.0,
+                scenarios_by_type: ScenarioCounts::default(),
+            },
+        });
+
+        app.handle_pipeline_event(PipelineEvent::Completed {
+            spec,
+            test_suite: suite,
+            feature_contents: vec!["Feature 1".into()],
+            traceability_content: Some("Trace".into()),
+        });
+
+        assert_eq!(app.pipeline_state.status, PipelineStatus::Done);
+        assert_eq!(app.screen, Screen::SpecViewer);
+        assert!(app.spec.is_some());
+        assert!(app.test_suite.is_some());
+        assert_eq!(app.feature_contents.len(), 1);
+    }
+
+    #[test]
+    fn test_viewer_state_default() {
+        let state = ViewerState::default();
+        assert_eq!(state.scroll_offset, 0);
+        assert_eq!(state.selected_tab, 0);
+        assert_eq!(state.selected_feature, 0);
+    }
+
+    #[test]
+    fn test_llm_status_variants() {
+        assert_eq!(LlmStatus::Unknown, LlmStatus::Unknown);
+        assert_eq!(LlmStatus::Ready, LlmStatus::Ready);
+        assert_ne!(LlmStatus::Unknown, LlmStatus::Ready);
+        assert_eq!(
+            LlmStatus::Error("test".into()),
+            LlmStatus::Error("test".into())
+        );
     }
 }

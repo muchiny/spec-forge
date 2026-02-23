@@ -78,3 +78,72 @@ pub fn key_hint() -> Style {
 pub fn key_desc() -> Style {
     Style::default().fg(Color::Gray)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pretty_assertions::assert_eq;
+
+    #[test]
+    fn test_color_constants() {
+        assert_eq!(PRIMARY, Color::Cyan);
+        assert_eq!(SUCCESS, Color::Green);
+        assert_eq!(ERROR, Color::Red);
+        assert_eq!(WARNING, Color::Yellow);
+        assert_eq!(MUTED, Color::DarkGray);
+        assert_eq!(TEXT, Color::White);
+    }
+
+    #[test]
+    fn test_priority_colors() {
+        assert_eq!(P1_COLOR, Color::Red);
+        assert_eq!(P2_COLOR, Color::Yellow);
+        assert_eq!(P3_COLOR, Color::Green);
+    }
+
+    #[test]
+    fn test_gherkin_syntax_colors() {
+        assert_eq!(GHERKIN_KEYWORD, Color::Blue);
+        assert_eq!(GHERKIN_TAG, Color::Cyan);
+        assert_eq!(GHERKIN_STRING, Color::Green);
+        assert_eq!(GHERKIN_COMMENT, Color::DarkGray);
+    }
+
+    #[test]
+    fn test_title_style() {
+        let style = title();
+        assert_eq!(style.fg, Some(PRIMARY));
+        assert!(style.add_modifier.contains(Modifier::BOLD));
+    }
+
+    #[test]
+    fn test_selected_style() {
+        let style = selected();
+        assert_eq!(style.fg, Some(Color::Black));
+        assert_eq!(style.bg, Some(PRIMARY));
+    }
+
+    #[test]
+    fn test_status_styles() {
+        assert_eq!(status_ok().fg, Some(SUCCESS));
+        assert_eq!(status_error().fg, Some(ERROR));
+        assert_eq!(status_warning().fg, Some(WARNING));
+    }
+
+    #[test]
+    fn test_tab_styles() {
+        let active = tab_active();
+        assert_eq!(active.fg, Some(Color::Black));
+        assert_eq!(active.bg, Some(PRIMARY));
+        assert!(active.add_modifier.contains(Modifier::BOLD));
+
+        let inactive = tab_inactive();
+        assert_eq!(inactive.fg, Some(Color::Gray));
+    }
+
+    #[test]
+    fn test_border_styles() {
+        assert_eq!(border().fg, Some(Color::Gray));
+        assert_eq!(border_active().fg, Some(PRIMARY));
+    }
+}

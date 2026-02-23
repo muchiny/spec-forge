@@ -20,13 +20,13 @@ impl GherkinWriter {
     pub fn render_feature(&self, feature: &Feature) -> String {
         let mut content = String::new();
 
-        // Header de langue
-        writeln!(content, "# language: {}", self.language.gherkin_code()).unwrap();
-        writeln!(content).unwrap();
+        // Header de langue — ecriture en memoire (String) : ne peut pas echouer
+        _ = writeln!(content, "# language: {}", self.language.gherkin_code());
+        _ = writeln!(content);
 
         // Tags de la feature
         if !feature.tags.is_empty() {
-            writeln!(content, "{}", feature.tags.join(" ")).unwrap();
+            _ = writeln!(content, "{}", feature.tags.join(" "));
         }
 
         // Feature
@@ -34,15 +34,15 @@ impl GherkinWriter {
             Language::French => "Fonctionnalité",
             Language::English => "Feature",
         };
-        writeln!(content, "{}: {}", feature_keyword, feature.name).unwrap();
+        _ = writeln!(content, "{}: {}", feature_keyword, feature.name);
 
         // Description
         if !feature.description.is_empty() {
             for line in feature.description.lines() {
-                writeln!(content, "  {}", line).unwrap();
+                _ = writeln!(content, "  {}", line);
             }
         }
-        writeln!(content).unwrap();
+        _ = writeln!(content);
 
         // Background
         if let Some(ref bg) = feature.background {
@@ -50,17 +50,17 @@ impl GherkinWriter {
                 Language::French => "Contexte",
                 Language::English => "Background",
             };
-            writeln!(content, "  {}:", bg_keyword).unwrap();
+            _ = writeln!(content, "  {}:", bg_keyword);
             for step in &bg.steps {
-                writeln!(content, "    {}", self.render_step(step)).unwrap();
+                _ = writeln!(content, "    {}", self.render_step(step));
             }
-            writeln!(content).unwrap();
+            _ = writeln!(content);
         }
 
         // Scenarios
         for scenario in &feature.scenarios {
             self.render_scenario(&mut content, scenario);
-            writeln!(content).unwrap();
+            _ = writeln!(content);
         }
 
         content
@@ -69,7 +69,7 @@ impl GherkinWriter {
     fn render_scenario(&self, content: &mut String, scenario: &Scenario) {
         // Tags
         if !scenario.tags.is_empty() {
-            writeln!(content, "  {}", scenario.tags.join(" ")).unwrap();
+            _ = writeln!(content, "  {}", scenario.tags.join(" "));
         }
 
         // Scenario keyword
@@ -85,38 +85,38 @@ impl GherkinWriter {
             }
         };
 
-        writeln!(content, "  {}: {}", keyword, scenario.name).unwrap();
+        _ = writeln!(content, "  {}: {}", keyword, scenario.name);
 
         // Steps
         for step in &scenario.steps {
-            writeln!(content, "    {}", self.render_step(step)).unwrap();
+            _ = writeln!(content, "    {}", self.render_step(step));
 
             // Doc string
             if let Some(ref doc) = step.doc_string {
-                writeln!(content, "      \"\"\"").unwrap();
+                _ = writeln!(content, "      \"\"\"");
                 for line in doc.lines() {
-                    writeln!(content, "      {}", line).unwrap();
+                    _ = writeln!(content, "      {}", line);
                 }
-                writeln!(content, "      \"\"\"").unwrap();
+                _ = writeln!(content, "      \"\"\"");
             }
 
             // Data table
             if let Some(ref table) = step.data_table {
                 for row in table {
                     let formatted = row.iter().map(|c| format!(" {} ", c)).collect::<Vec<_>>();
-                    writeln!(content, "      |{}|", formatted.join("|")).unwrap();
+                    _ = writeln!(content, "      |{}|", formatted.join("|"));
                 }
             }
         }
 
         // Examples
         if let Some(ref examples) = scenario.examples {
-            writeln!(content).unwrap();
+            _ = writeln!(content);
             let examples_keyword = match self.language {
                 Language::French => "Exemples",
                 Language::English => "Examples",
             };
-            writeln!(content, "    {}:", examples_keyword).unwrap();
+            _ = writeln!(content, "    {}:", examples_keyword);
 
             // Headers
             let headers = examples
@@ -124,12 +124,12 @@ impl GherkinWriter {
                 .iter()
                 .map(|h| format!(" {} ", h))
                 .collect::<Vec<_>>();
-            writeln!(content, "      |{}|", headers.join("|")).unwrap();
+            _ = writeln!(content, "      |{}|", headers.join("|"));
 
             // Rows
             for row in &examples.rows {
                 let cells = row.iter().map(|c| format!(" {} ", c)).collect::<Vec<_>>();
-                writeln!(content, "      |{}|", cells.join("|")).unwrap();
+                _ = writeln!(content, "      |{}|", cells.join("|"));
             }
         }
     }
@@ -346,5 +346,92 @@ mod tests {
         });
         let content = writer.render_feature(&feature);
         insta::assert_snapshot!(content);
+    }
+
+    #[test]
+    fn test_render_feature_without_scenarios() {
+        let writer = GherkinWriter::new(Language::French);
+        let feature = Feature::new("Feature vide".into(), "Pas de scenarios".into());
+        let content = writer.render_feature(&feature);
+        assert!(content.contains("Fonctionnalité: Feature vide"));
+        // Ne doit pas contenir de section Scenario
+        assert!(!content.contains("Scénario:"));
+    }
+
+    #[test]
+    fn test_render_feature_without_background() {
+        let writer = GherkinWriter::new(Language::French);
+        let mut feature = Feature::new("Sans contexte".into(), "Test".into());
+        feature.scenarios.push(Scenario {
+            name: "Simple".into(),
+            tags: vec![],
+            scenario_type: ScenarioType::HappyPath,
+            steps: vec![Step {
+                keyword: StepKeyword::Then,
+                text: "resultat ok".into(),
+                doc_string: None,
+                data_table: None,
+            }],
+            examples: None,
+            test_data_suggestions: vec![],
+            verification_of: Vec::new(),
+            coverage_technique: None,
+        });
+        let content = writer.render_feature(&feature);
+        assert!(!content.contains("Contexte:"));
+        assert!(content.contains("Scénario: Simple"));
+    }
+
+    #[test]
+    fn test_render_feature_with_doc_string() {
+        let writer = GherkinWriter::new(Language::French);
+        let mut feature = Feature::new("DocString".into(), "".into());
+        feature.scenarios.push(Scenario {
+            name: "Avec doc string".into(),
+            tags: vec![],
+            scenario_type: ScenarioType::HappyPath,
+            steps: vec![Step {
+                keyword: StepKeyword::Given,
+                text: "le contenu suivant".into(),
+                doc_string: Some("ligne 1\nligne 2\nligne 3".into()),
+                data_table: None,
+            }],
+            examples: None,
+            test_data_suggestions: vec![],
+            verification_of: Vec::new(),
+            coverage_technique: None,
+        });
+        let content = writer.render_feature(&feature);
+        assert!(content.contains("\"\"\""));
+        assert!(content.contains("ligne 1"));
+    }
+
+    #[test]
+    fn test_render_feature_with_data_table() {
+        let writer = GherkinWriter::new(Language::French);
+        let mut feature = Feature::new("DataTable".into(), "".into());
+        feature.scenarios.push(Scenario {
+            name: "Avec table".into(),
+            tags: vec![],
+            scenario_type: ScenarioType::HappyPath,
+            steps: vec![Step {
+                keyword: StepKeyword::Given,
+                text: "les utilisateurs suivants".into(),
+                doc_string: None,
+                data_table: Some(vec![
+                    vec!["nom".into(), "role".into()],
+                    vec!["Alice".into(), "admin".into()],
+                    vec!["Bob".into(), "user".into()],
+                ]),
+            }],
+            examples: None,
+            test_data_suggestions: vec![],
+            verification_of: Vec::new(),
+            coverage_technique: None,
+        });
+        let content = writer.render_feature(&feature);
+        assert!(content.contains("| nom"));
+        assert!(content.contains("| Alice"));
+        assert!(content.contains("| Bob"));
     }
 }

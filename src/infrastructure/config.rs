@@ -411,6 +411,7 @@ impl Config {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_config_default() {
@@ -549,5 +550,122 @@ mod tests {
         config.pipeline.max_retries = 99;
         let err = config.validate().unwrap_err();
         assert!(err.to_string().contains("max_retries"));
+    }
+
+    #[test]
+    fn test_compliance_to_profile_automotive() {
+        let config = ComplianceConfig {
+            profile: "automotive".to_string(),
+            safety_level: Some("ASIL-D".to_string()),
+            ..Default::default()
+        };
+        let profile = config.to_compliance_profile();
+        assert!(matches!(
+            profile,
+            Some(ComplianceProfile::Automotive(
+                crate::domain::specification::AsilLevel::D
+            ))
+        ));
+    }
+
+    #[test]
+    fn test_compliance_to_profile_railway() {
+        let config = ComplianceConfig {
+            profile: "railway".to_string(),
+            safety_level: Some("SSIL-3".to_string()),
+            ..Default::default()
+        };
+        let profile = config.to_compliance_profile();
+        assert!(matches!(
+            profile,
+            Some(ComplianceProfile::Railway(
+                crate::domain::specification::SsilLevel::Level3
+            ))
+        ));
+    }
+
+    #[test]
+    fn test_compliance_to_profile_safety() {
+        let config = ComplianceConfig {
+            profile: "safety".to_string(),
+            safety_level: Some("SIL-4".to_string()),
+            ..Default::default()
+        };
+        let profile = config.to_compliance_profile();
+        assert!(matches!(
+            profile,
+            Some(ComplianceProfile::Safety(
+                crate::domain::specification::SilLevel::Sil4
+            ))
+        ));
+    }
+
+    #[test]
+    fn test_compliance_to_profile_default_levels() {
+        // Sans safety_level, les profils utilisent un niveau par defaut
+        let aviation = ComplianceConfig {
+            profile: "aviation".to_string(),
+            safety_level: None,
+            ..Default::default()
+        };
+        assert!(matches!(
+            aviation.to_compliance_profile(),
+            Some(ComplianceProfile::Aviation(
+                crate::domain::specification::DalLevel::E
+            ))
+        ));
+
+        let safety = ComplianceConfig {
+            profile: "safety".to_string(),
+            safety_level: None,
+            ..Default::default()
+        };
+        assert!(matches!(
+            safety.to_compliance_profile(),
+            Some(ComplianceProfile::Safety(
+                crate::domain::specification::SilLevel::Sil1
+            ))
+        ));
+    }
+
+    #[test]
+    fn test_compliance_profile_case_insensitive() {
+        let config = ComplianceConfig {
+            profile: "AVIATION".to_string(),
+            safety_level: Some("a".to_string()),
+            ..Default::default()
+        };
+        let profile = config.to_compliance_profile();
+        assert!(matches!(
+            profile,
+            Some(ComplianceProfile::Aviation(
+                crate::domain::specification::DalLevel::A
+            ))
+        ));
+    }
+
+    #[test]
+    fn test_config_default_completeness() {
+        // Verifie que la config par defaut est coherente et valide
+        let config = Config::default();
+        assert!(
+            config.validate().is_ok(),
+            "La config par defaut DOIT etre valide"
+        );
+        assert_eq!(config.pipeline.token_budget, 2000);
+        assert_eq!(config.compliance.profile, "general");
+        assert!(config.output.traceability);
+        assert!(config.validation.validate_gherkin_syntax);
+    }
+
+    #[test]
+    fn test_config_validate_invalid_p2_p3_coverage() {
+        let mut config = Config::default();
+        config.compliance.min_p2_coverage = 200;
+        assert!(config.validate().is_err());
+
+        let mut config2 = Config::default();
+        config2.compliance.min_p3_coverage = 101;
+        assert!(config2.validate().is_err());
     }
 }

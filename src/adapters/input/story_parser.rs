@@ -154,6 +154,7 @@ pub fn detect_language(content: &str) -> Language {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_detect_language_french() {
@@ -255,6 +256,43 @@ En tant que user, je veux une feature afin de gagner du temps.
         // EN indicators: "i want", "so that", "scenario" = 3
         // Tie goes to French
         assert_eq!(lang, Language::French);
+    }
+
+    #[test]
+    fn test_parse_with_crlf() {
+        let content = "## Feature\r\n\r\nEn tant que admin, je veux gerer afin de controler.\r\n\r\n- Critere 1\r\n- Critere 2\r\n";
+        let stories = parse_stories(content, Language::French).unwrap();
+        assert_eq!(stories.len(), 1);
+        assert_eq!(stories[0].actor, "admin");
+    }
+
+    #[test]
+    fn test_parse_multiple_empty_lines() {
+        let content = "## Feature\n\n\n\n\nEn tant que user, je veux tester afin de valider.\n\n\n\n- Critere\n\n\n";
+        let stories = parse_stories(content, Language::French).unwrap();
+        assert_eq!(stories.len(), 1);
+        assert_eq!(stories[0].acceptance_criteria.len(), 1);
+    }
+
+    #[test]
+    fn test_parse_actor_with_comma() {
+        let content =
+            "En tant que administrateur systeme, je veux superviser afin de maintenir la qualite.";
+        let stories = parse_stories(content, Language::French).unwrap();
+        assert_eq!(stories.len(), 1);
+        assert_eq!(stories[0].actor, "administrateur systeme");
+    }
+
+    #[test]
+    fn test_parse_stories_multiple_same_title() {
+        let content = r#"## Feature
+En tant que user, je veux A afin de B.
+
+## Feature
+En tant que admin, je veux C afin de D.
+"#;
+        let stories = parse_stories(content, Language::French).unwrap();
+        assert_eq!(stories.len(), 2, "Meme titre ne doit pas fusionner");
     }
 
     mod proptest_suite {

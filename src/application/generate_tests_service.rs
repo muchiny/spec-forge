@@ -345,7 +345,8 @@ impl GenerateTestsService {
             merged.compute_coverage(spec.functional_requirements.len());
             info!(
                 coverage = format!("{:.0}%", merged.coverage.coverage_percentage),
-                "Couverture apres passe supplementaire {}", pass + 1
+                "Couverture apres passe supplementaire {}",
+                pass + 1
             );
         }
 
@@ -760,6 +761,7 @@ fn validate_llm_test_output(suite: &TestSuite, spec: &Specification) -> Vec<LlmV
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_parse_keyword() {
@@ -1234,6 +1236,137 @@ mod tests {
             parse_coverage_technique("unknown"),
             CoverageTechnique::EquivalencePartitioning
         );
+    }
+
+    // -----------------------------------------------------------------------
+    // Tests edge cases supplementaires
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_validate_empty_spec_no_warnings() {
+        let spec = Specification::new("Vide".into());
+        let suite = TestSuite {
+            features: vec![],
+            source_spec_id: spec.id,
+            total_scenarios: 0,
+            coverage: TestCoverage {
+                requirements_covered: vec![],
+                requirements_total: 0,
+                coverage_percentage: 0.0,
+                scenarios_by_type: ScenarioCounts::default(),
+            },
+        };
+        let warnings = validate_llm_test_output(&suite, &spec);
+        // Pas d'avertissements pour une spec vide (pas de FR a couvrir)
+        let coverage_warnings: Vec<_> = warnings
+            .iter()
+            .filter(|w| w.rule == "ISO-29119-COVERAGE")
+            .collect();
+        assert!(
+            coverage_warnings.is_empty(),
+            "Pas de warnings de couverture attendus pour spec vide"
+        );
+    }
+
+    #[test]
+    fn test_validate_full_coverage_p1() {
+        let spec = {
+            let mut s = Specification::new("Test".into());
+            s.functional_requirements
+                .push(make_fr("FR-001", "DOIT critique", Priority::P1));
+            s
+        };
+        // 3 scenarios pour FR-001 P1 (>= 2 requis)
+        let mut feature = Feature::new("Test".into(), "".into());
+        feature.covered_requirements = vec!["FR-001".into()];
+        for i in 0..3 {
+            feature.scenarios.push(Scenario {
+                name: format!("Scenario {i}"),
+                tags: vec![],
+                scenario_type: if i == 0 {
+                    ScenarioType::HappyPath
+                } else {
+                    ScenarioType::ErrorScenario
+                },
+                steps: vec![],
+                examples: None,
+                test_data_suggestions: vec![],
+                verification_of: vec!["FR-001".into()],
+                coverage_technique: None,
+            });
+        }
+        let suite = TestSuite {
+            features: vec![feature],
+            source_spec_id: spec.id,
+            total_scenarios: 3,
+            coverage: TestCoverage {
+                requirements_covered: vec!["FR-001".into()],
+                requirements_total: 1,
+                coverage_percentage: 100.0,
+                scenarios_by_type: ScenarioCounts::default(),
+            },
+        };
+        let warnings = validate_llm_test_output(&suite, &spec);
+        let p1_depth: Vec<_> = warnings
+            .iter()
+            .filter(|w| w.rule == "ISO-29119-P1-DEPTH")
+            .collect();
+        assert!(
+            p1_depth.is_empty(),
+            "Pas de warning P1 attendu avec 3 scenarios: {:?}",
+            p1_depth
+        );
+    }
+
+    #[test]
+    fn test_deserialize_llm_test_output_minimal() {
+        let json = r#"{"features": [{"name": "Feature Test"}]}"#;
+        let result: Result<LlmTestOutput, _> = serde_json::from_str(json);
+        assert!(
+            result.is_ok(),
+            "LlmTestOutput minimal DOIT parser: {:?}",
+            result.err()
+        );
+        assert_eq!(result.unwrap().features[0].name, "Feature Test");
+    }
+
+    #[test]
+    fn test_deserialize_llm_test_output_empty_features() {
+        let json = r#"{"features": []}"#;
+        let result: Result<LlmTestOutput, _> = serde_json::from_str(json);
+        assert!(
+            result.is_ok(),
+            "Features vides DOIT parser: {:?}",
+            result.err()
+        );
+        assert!(result.unwrap().features.is_empty());
+    }
+
+    #[test]
+    fn test_merge_suites_single() {
+        let suite = TestSuite {
+            features: vec![Feature::new("F1".into(), "D1".into())],
+            source_spec_id: Uuid::new_v4(),
+            total_scenarios: 5,
+            coverage: TestCoverage {
+                requirements_covered: vec!["FR-001".into()],
+                requirements_total: 1,
+                coverage_percentage: 100.0,
+                scenarios_by_type: ScenarioCounts::default(),
+            },
+        };
+        let merged = GenerateTestsService::merge_test_suites(vec![suite]);
+        assert_eq!(merged.features.len(), 1);
+        assert_eq!(merged.total_scenarios, 5);
+    }
+
+    #[test]
+    fn test_batches_empty_spec() {
+        let spec = Specification::new("Vide".into());
+        let batches = build_spec_batches(&spec, 1000);
+        // Une spec vide retourne un seul batch (la spec elle-meme)
+        assert_eq!(batches.len(), 1, "Spec vide retourne 1 batch");
+        assert!(batches[0].user_scenarios.is_empty());
     }
 
     mod proptest_suite {

@@ -2,9 +2,11 @@
 
 > **Transforme tes User Stories en Spécifications et Tests Gherkin/BDD automatiquement, grâce à l'IA locale.**
 
-[![Rust](https://img.shields.io/badge/Rust-1.85+-orange?logo=rust)](https://www.rust-lang.org/)
+[![Rust](https://img.shields.io/badge/Rust-1.93+-orange?logo=rust)](https://www.rust-lang.org/)
 [![Ollama](https://img.shields.io/badge/LLM-Ollama-blue?logo=ollama)](https://ollama.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Tests](https://img.shields.io/badge/Tests-125%2B-brightgreen)]()
+[![ISO](https://img.shields.io/badge/ISO-29148%20%7C%2025010%20%7C%2029119-blueviolet)]()
 
 ---
 
@@ -136,6 +138,37 @@ spec-forge generate-tests --spec output/specs/spec.md --output output/features/
 spec-forge check
 ```
 
+### 🖥️ Interface TUI (Terminal UI)
+
+```bash
+# Lancer l'interface interactive
+spec-forge tui
+```
+
+L'interface TUI offre **8 écrans** interactifs :
+
+| Touche | Écran | Description |
+|--------|-------|-------------|
+| `1` | 🏠 Accueil | Dashboard avec statut LLM et résumé |
+| `2` | 📂 Fichier | Sélecteur de fichiers d'entrée |
+| `3` | ⚙️ Pipeline | Exécution et suivi en temps réel |
+| `4` | 📋 Spec | Visualisation de la spécification |
+| `5` | 🧪 Gherkin | Visualisation des tests générés |
+| `6` | 📊 Traçabilité | Matrice de traçabilité |
+| `7` | 🔧 Config | Configuration actuelle |
+| `8` | 📜 Journaux | Logs en temps réel |
+
+### 📥 Formats d'entrée supportés
+
+| Format | Extension | Exemple |
+|--------|-----------|---------|
+| 📝 Markdown | `.md` | `user_stories.md` |
+| 📄 YAML | `.yaml` / `.yml` | `mobile_banking.yaml` |
+| 📑 PDF | `.pdf` | `requirements.pdf` |
+| 📃 DOCX | `.docx` | `specifications.docx` |
+
+> 📏 **Limite** : fichiers de 10 Mo maximum
+
 ### 📝 Format d'entrée : User Stories en Markdown
 
 ```markdown
@@ -213,7 +246,7 @@ graph TB
 
     subgraph "🔧 Adapters (implémentations)"
         A1["OllamaAdapter"]
-        A2["MarkdownReader<br/>YamlReader"]
+        A2["MarkdownReader<br/>YamlReader<br/>PdfReader<br/>DocxReader"]
         A3["MarkdownWriter<br/>GherkinWriter<br/>TraceabilityWriter"]
         A4["FileTemplateEngine<br/>(Handlebars)"]
     end
@@ -290,7 +323,10 @@ spec-forge/
 │   │   │   └── mock_adapter.rs           # Mock pour tests
 │   │   ├── input/
 │   │   │   ├── markdown_reader.rs        # Parse US depuis Markdown
-│   │   │   └── yaml_reader.rs            # Parse US depuis YAML
+│   │   │   ├── yaml_reader.rs            # Parse US depuis YAML
+│   │   │   ├── pdf_reader.rs             # Parse US depuis PDF
+│   │   │   ├── docx_reader.rs            # Parse US depuis DOCX
+│   │   │   └── story_parser.rs           # Parseur commun US
 │   │   ├── output/
 │   │   │   ├── markdown_writer.rs        # Écrit specs Markdown
 │   │   │   ├── gherkin_writer.rs         # Écrit fichiers .feature
@@ -300,10 +336,22 @@ spec-forge/
 │   ├── application/                      # ⚙️ Services applicatifs
 │   │   ├── pipeline.rs                   # Orchestrateur du pipeline
 │   │   ├── refine_service.rs             # US → Spec (via LLM)
-│   │   └── generate_tests_service.rs     # Spec → Gherkin (via LLM)
-│   └── infrastructure/                   # 🖥️ Configuration & logging
-│       ├── config.rs                     # Chargement config YAML
-│       └── logging.rs                    # Setup tracing
+│   │   ├── generate_tests_service.rs     # Spec → Gherkin (via LLM)
+│   │   ├── llm_retry.rs                  # Stratégie de retry LLM
+│   │   ├── json_utils.rs                 # Utilitaires parsing JSON
+│   │   └── pipeline_events.rs            # Événements du pipeline
+│   ├── infrastructure/                   # 🖥️ Configuration & logging
+│   │   ├── config.rs                     # Chargement config YAML
+│   │   └── logging.rs                    # Setup tracing
+│   └── tui/                              # 🖥️ Interface TUI
+│       ├── app.rs                        # État applicatif
+│       ├── screens/                      # 8 écrans (dashboard, pipeline, ...)
+│       └── widgets/                      # Composants (header, help, ...)
+├── 🧪 tests/
+│   ├── integration/                      # Tests d'intégration
+│   └── fixtures/                         # Données de test
+├── 🔒 fuzz/                              # Fuzzing (cargo-fuzz)
+│   └── fuzz_targets/                     # 6 cibles de fuzzing
 └── 📤 output/                            # Résultats générés
     ├── specs/                            # Spécifications raffinées
     ├── features/                         # Fichiers .feature
@@ -384,6 +432,106 @@ La **matrice de traçabilité** auto-générée identifie :
 - ✅ Les exigences **couvertes** par des scénarios
 - ⚠️ Les **GAPs** (exigences sans test correspondant)
 - 📈 Le **taux de couverture** global
+
+---
+
+## 📐 Conformité ISO
+
+spec-forge s'appuie sur **4 normes ISO** pour garantir la qualité des artefacts générés :
+
+```mermaid
+graph TB
+    subgraph "📐 Normes ISO intégrées"
+        ISO1["📋 ISO/IEC/IEEE 29148:2018<br/><i>Ingénierie des exigences</i><br/>9 critères de bien-formation"]
+        ISO2["⭐ ISO/IEC 25010:2023<br/><i>Qualité produit</i><br/>9 caractéristiques qualité"]
+        ISO3["📏 ISO/IEC 25023:2016<br/><i>Métriques qualité</i><br/>Complétude, stabilité, adéquation"]
+        ISO4["🧪 ISO/IEC/IEEE 29119<br/><i>Tests logiciel</i><br/>Niveaux + techniques"]
+    end
+
+    ISO1 --> |"validation.rs"| V["✅ Validation des exigences"]
+    ISO2 --> |"specification.rs"| S["📋 Caractéristiques qualité"]
+    ISO3 --> |"traceability.rs"| T["📊 Métriques de couverture"]
+    ISO4 --> |"test_case.rs"| TC["🧪 Génération de tests"]
+
+    style ISO1 fill:#2196F3,stroke:#333,color:#fff
+    style ISO2 fill:#4CAF50,stroke:#333,color:#fff
+    style ISO3 fill:#FF9800,stroke:#333,color:#fff
+    style ISO4 fill:#9C27B0,stroke:#333,color:#fff
+```
+
+### 📋 9 critères de bien-formation (ISO 29148)
+
+| # | Critère | Description |
+|---|---------|-------------|
+| 1 | 🔍 Necessary | Pas de doublon, chaque exigence est nécessaire |
+| 2 | 🎯 Unambiguous | Pas de mots ambigus (environ, parfois, ...) |
+| 3 | ✅ Complete | Tous les champs obligatoires remplis |
+| 4 | 1️⃣ Singular | Une seule exigence par statement |
+| 5 | 🏗️ Feasible | L'exigence est réalisable |
+| 6 | 🔬 Verifiable | L'exigence est testable |
+| 7 | ✏️ Correct | Syntaxe normative (MUST/SHALL/SHOULD/COULD) |
+| 8 | 📏 Conforming | Conforme au format attendu |
+| 9 | 🔗 Traceable | Source identifiable |
+
+### 🏭 Profils de conformité réglementaire
+
+| Profil | Norme | Niveaux | Domaine |
+|--------|-------|---------|---------|
+| `General` | ISO 29148 | — | 🌐 Tout domaine |
+| `Aviation(DalLevel)` | DO-178C | A / B / C / D / E | ✈️ Aéronautique |
+| `Medical(SwClass)` | IEC 62304 | A / B / C | 🏥 Médical |
+| `Automotive(AsilLevel)` | ISO 26262 | A / B / C / D | 🚗 Automobile |
+| `Railway(SsilLevel)` | EN 50716 | 1 / 2 / 3 / 4 | 🚄 Ferroviaire |
+| `Safety(SilLevel)` | IEC 61508 | 1 / 2 / 3 / 4 | 🔒 Sécurité fonctionnelle |
+
+---
+
+## 🧪 Tests & Qualité
+
+### 🔬 Stratégie de tests
+
+```mermaid
+graph LR
+    subgraph "🧪 Pyramide de tests"
+        UT["🔹 Tests unitaires<br/><i>114+ tests inline</i>"]
+        IT["🔸 Tests d'intégration<br/><i>11+ tests pipeline</i>"]
+        PT["🟣 Property-based<br/><i>proptest</i>"]
+        ST["📸 Snapshot tests<br/><i>insta</i>"]
+        FZ["🔒 Fuzzing<br/><i>cargo-fuzz (6 cibles)</i>"]
+        MK["🌐 Mock HTTP<br/><i>wiremock</i>"]
+    end
+
+    UT --> IT --> PT
+    ST --> FZ --> MK
+
+    style UT fill:#4CAF50,stroke:#333,color:#fff
+    style IT fill:#FF9800,stroke:#333,color:#fff
+    style FZ fill:#F44336,stroke:#333,color:#fff
+```
+
+### 🛠️ Commandes de développement
+
+```bash
+# 🔨 Compilation
+cargo build --release
+
+# 🧪 Tous les tests (125+)
+cargo test
+
+# 🔍 Lint (0 warnings)
+cargo clippy
+
+# 🎨 Formatage
+cargo fmt
+
+# 🔒 Fuzzing (6 cibles disponibles)
+cargo fuzz run fuzz_story_parser
+cargo fuzz run fuzz_validation
+cargo fuzz run fuzz_clean_json
+cargo fuzz run fuzz_config_yaml
+cargo fuzz run fuzz_docx_xml
+cargo fuzz run fuzz_docx_zip
+```
 
 ---
 

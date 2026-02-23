@@ -404,6 +404,7 @@ mod tests {
     use super::*;
     use crate::domain::specification::*;
     use crate::domain::test_case::*;
+    use pretty_assertions::assert_eq;
 
     fn make_fr(id: &str, priority: Priority) -> FunctionalRequirement {
         FunctionalRequirement {
@@ -571,6 +572,179 @@ mod tests {
 
         let matrix = build_traceability_matrix(&spec, &suite);
         assert_eq!(matrix.summary.orphan_tests, vec!["Orphan"]);
+    }
+
+    #[test]
+    fn test_compliance_notes_aviation() {
+        let mut spec = Specification::new("Test".into());
+        spec.compliance_profile = Some(ComplianceProfile::Aviation(
+            crate::domain::specification::DalLevel::A,
+        ));
+        spec.functional_requirements
+            .push(make_fr("FR-001", Priority::P1));
+
+        let suite = TestSuite {
+            features: vec![],
+            source_spec_id: spec.id,
+            total_scenarios: 0,
+            coverage: TestCoverage {
+                requirements_covered: vec![],
+                requirements_total: 1,
+                coverage_percentage: 0.0,
+                scenarios_by_type: ScenarioCounts::default(),
+            },
+        };
+
+        let matrix = build_traceability_matrix(&spec, &suite);
+        assert!(
+            matrix
+                .compliance_notes
+                .iter()
+                .any(|n| n.standard == "DO-178C"),
+            "Aviation profile doit generer une note DO-178C"
+        );
+    }
+
+    #[test]
+    fn test_compliance_notes_medical() {
+        let mut spec = Specification::new("Test".into());
+        spec.compliance_profile = Some(ComplianceProfile::Medical(
+            crate::domain::specification::SwClass::C,
+        ));
+        spec.functional_requirements
+            .push(make_fr("FR-001", Priority::P1));
+
+        let suite = TestSuite {
+            features: vec![],
+            source_spec_id: spec.id,
+            total_scenarios: 0,
+            coverage: TestCoverage {
+                requirements_covered: vec![],
+                requirements_total: 1,
+                coverage_percentage: 0.0,
+                scenarios_by_type: ScenarioCounts::default(),
+            },
+        };
+
+        let matrix = build_traceability_matrix(&spec, &suite);
+        assert!(
+            matrix
+                .compliance_notes
+                .iter()
+                .any(|n| n.standard == "IEC 62304"),
+            "Medical profile doit generer une note IEC 62304"
+        );
+    }
+
+    #[test]
+    fn test_compliance_notes_automotive() {
+        let mut spec = Specification::new("Test".into());
+        spec.compliance_profile = Some(ComplianceProfile::Automotive(
+            crate::domain::specification::AsilLevel::D,
+        ));
+        spec.functional_requirements
+            .push(make_fr("FR-001", Priority::P1));
+
+        let suite = TestSuite {
+            features: vec![],
+            source_spec_id: spec.id,
+            total_scenarios: 0,
+            coverage: TestCoverage {
+                requirements_covered: vec![],
+                requirements_total: 1,
+                coverage_percentage: 0.0,
+                scenarios_by_type: ScenarioCounts::default(),
+            },
+        };
+
+        let matrix = build_traceability_matrix(&spec, &suite);
+        assert!(
+            matrix
+                .compliance_notes
+                .iter()
+                .any(|n| n.standard == "ISO 26262"),
+            "Automotive profile doit generer une note ISO 26262"
+        );
+    }
+
+    #[test]
+    fn test_traceability_status_display() {
+        assert_eq!(TraceabilityStatus::FullyCovered.to_string(), "Couvert");
+        assert_eq!(TraceabilityStatus::PartiallyCovered.to_string(), "Partiel");
+        assert_eq!(TraceabilityStatus::NotCovered.to_string(), "GAP");
+        assert_eq!(
+            TraceabilityStatus::VerifiedByAnalysis.to_string(),
+            "Analyse"
+        );
+        assert_eq!(
+            TraceabilityStatus::VerifiedByInspection.to_string(),
+            "Inspection"
+        );
+        assert_eq!(TraceabilityStatus::VerifiedByDemo.to_string(), "Demo");
+    }
+
+    #[test]
+    fn test_compliance_status_display() {
+        assert_eq!(ComplianceStatus::Compliant.to_string(), "Conforme");
+        assert_eq!(
+            ComplianceStatus::PartiallyCompliant.to_string(),
+            "Partiellement conforme"
+        );
+        assert_eq!(ComplianceStatus::NonCompliant.to_string(), "Non conforme");
+    }
+
+    #[test]
+    fn test_p1_partial_coverage() {
+        // P1 avec un seul scenario = PartiallyCovered
+        let mut spec = Specification::new("Test".into());
+        spec.functional_requirements
+            .push(make_fr("FR-001", Priority::P1));
+
+        let mut feature = Feature::new("Test".into(), "".into());
+        feature.covered_requirements = vec!["FR-001".into()];
+        feature
+            .scenarios
+            .push(make_scenario_with_verif("S1", vec!["FR-001".into()]));
+
+        let suite = TestSuite {
+            features: vec![feature],
+            source_spec_id: spec.id,
+            total_scenarios: 1,
+            coverage: TestCoverage {
+                requirements_covered: vec!["FR-001".into()],
+                requirements_total: 1,
+                coverage_percentage: 100.0,
+                scenarios_by_type: ScenarioCounts::default(),
+            },
+        };
+
+        let matrix = build_traceability_matrix(&spec, &suite);
+        assert_eq!(
+            matrix.entries[0].status,
+            TraceabilityStatus::PartiallyCovered,
+            "P1 avec 1 seul scenario doit etre PartiallyCovered"
+        );
+    }
+
+    #[test]
+    fn test_empty_matrix() {
+        let spec = Specification::new("Empty".into());
+        let suite = TestSuite {
+            features: vec![],
+            source_spec_id: spec.id,
+            total_scenarios: 0,
+            coverage: TestCoverage {
+                requirements_covered: vec![],
+                requirements_total: 0,
+                coverage_percentage: 0.0,
+                scenarios_by_type: ScenarioCounts::default(),
+            },
+        };
+
+        let matrix = build_traceability_matrix(&spec, &suite);
+        assert!(matrix.entries.is_empty());
+        assert_eq!(matrix.summary.total_requirements, 0);
+        assert!((matrix.summary.forward_coverage_pct - 100.0).abs() < f64::EPSILON);
     }
 
     #[test]

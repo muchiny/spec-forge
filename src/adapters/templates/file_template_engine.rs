@@ -23,7 +23,11 @@ impl FileTemplateEngine {
             for entry in std::fs::read_dir(template_dir)? {
                 let entry = entry?;
                 let path = entry.path();
-                if path.extension().is_some_and(|ext| ext == "md") {
+                if path.extension().is_some_and(|ext| ext == "md")
+                    && path
+                        .file_stem()
+                        .is_some_and(|name| !name.eq_ignore_ascii_case("readme"))
+                {
                     let name = path
                         .file_stem()
                         .unwrap_or_default()
@@ -85,6 +89,7 @@ impl TemplateEngine for FileTemplateEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
     use std::fs;
     use tempfile::TempDir;
 

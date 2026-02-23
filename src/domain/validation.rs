@@ -625,6 +625,7 @@ mod tests {
     use crate::domain::specification::*;
     use crate::domain::test_case::*;
     use crate::domain::user_story::Priority;
+    use pretty_assertions::assert_eq;
     use uuid::Uuid;
 
     fn make_fr(id: &str, statement: &str, priority: Priority) -> FunctionalRequirement {
@@ -880,6 +881,180 @@ mod tests {
         assert!((metrics.risk_coverage - 1.0).abs() < f64::EPSILON);
         assert!(metrics.test_adequacy_ratio >= 2.0);
         assert!(metrics.overall_score > 0.5);
+    }
+
+    #[test]
+    fn test_validate_scores_in_range() {
+        // Spec vide : scores dans [0.0, 1.0]
+        let spec = Specification::new("Empty".into());
+        let v = validate_specification(&spec);
+        assert!(v.completeness_score >= 0.0 && v.completeness_score <= 1.0);
+        assert!(v.clarity_score >= 0.0 && v.clarity_score <= 1.0);
+        assert!(v.testability_score >= 0.0 && v.testability_score <= 1.0);
+
+        // Spec complete : scores dans [0.0, 1.0]
+        let spec = make_complete_spec();
+        let v = validate_specification(&spec);
+        assert!(v.completeness_score >= 0.0 && v.completeness_score <= 1.0);
+        assert!(v.clarity_score >= 0.0 && v.clarity_score <= 1.0);
+        assert!(v.testability_score >= 0.0 && v.testability_score <= 1.0);
+    }
+
+    #[test]
+    fn test_wellformedness_french_normative() {
+        // Mots normatifs francais : DOIT, DEVRAIT, POURRAIT
+        let fr_doit = make_fr(
+            "FR-001",
+            "Le systeme DOIT traiter les requetes",
+            Priority::P1,
+        );
+        let ids = HashSet::from(["FR-001"]);
+        let warnings = check_requirement_wellformedness(&fr_doit, &ids);
+        assert!(
+            !warnings
+                .iter()
+                .any(|w| w.criterion == WellFormednessCriterion::Correct),
+            "DOIT est un mot normatif valide"
+        );
+
+        let fr_devrait = make_fr(
+            "FR-002",
+            "Le systeme DEVRAIT logger les erreurs",
+            Priority::P2,
+        );
+        let ids2 = HashSet::from(["FR-002"]);
+        let warnings2 = check_requirement_wellformedness(&fr_devrait, &ids2);
+        assert!(
+            !warnings2
+                .iter()
+                .any(|w| w.criterion == WellFormednessCriterion::Correct),
+            "DEVRAIT est un mot normatif valide"
+        );
+    }
+
+    #[test]
+    fn test_wellformedness_ambiguous_french() {
+        let fr = make_fr(
+            "FR-001",
+            "Le systeme DOIT traiter environ 100 requetes",
+            Priority::P1,
+        );
+        let ids = HashSet::from(["FR-001"]);
+        let warnings = check_requirement_wellformedness(&fr, &ids);
+        assert!(
+            warnings
+                .iter()
+                .any(|w| w.criterion == WellFormednessCriterion::Unambiguous),
+            "'environ' est un mot ambigu interdit"
+        );
+    }
+
+    #[test]
+    fn test_wellformedness_compound_statement() {
+        let fr = make_fr(
+            "FR-001",
+            "Le systeme DOIT traiter les requetes et doit logger les erreurs",
+            Priority::P1,
+        );
+        let ids = HashSet::from(["FR-001"]);
+        let warnings = check_requirement_wellformedness(&fr, &ids);
+        assert!(
+            warnings
+                .iter()
+                .any(|w| w.criterion == WellFormednessCriterion::Singular),
+            "Exigence composee avec 'et doit' doit etre detectee"
+        );
+    }
+
+    #[test]
+    fn test_wellformedness_invalid_id_format() {
+        let fr = make_fr("REQ-001", "System MUST do X", Priority::P1);
+        let ids = HashSet::from(["REQ-001"]);
+        let warnings = check_requirement_wellformedness(&fr, &ids);
+        assert!(
+            warnings
+                .iter()
+                .any(|w| w.criterion == WellFormednessCriterion::Conforming),
+            "ID ne commencant pas par FR- doit etre signale"
+        );
+    }
+
+    #[test]
+    fn test_wellformedness_parent_inexistant() {
+        let mut fr = make_fr("FR-002", "System MUST do Y", Priority::P2);
+        fr.parent_requirement = Some("FR-999".into());
+        let ids = HashSet::from(["FR-002"]);
+        let warnings = check_requirement_wellformedness(&fr, &ids);
+        assert!(
+            warnings
+                .iter()
+                .any(|w| w.criterion == WellFormednessCriterion::Traceable),
+            "Parent inexistant doit etre signale"
+        );
+    }
+
+    #[test]
+    fn test_wellformedness_non_testable() {
+        let mut fr = make_fr("FR-001", "System MUST do X", Priority::P1);
+        fr.testable = false;
+        let ids = HashSet::from(["FR-001"]);
+        let warnings = check_requirement_wellformedness(&fr, &ids);
+        assert!(
+            warnings
+                .iter()
+                .any(|w| w.criterion == WellFormednessCriterion::Verifiable),
+            "Exigence non-testable doit generer un warning Verifiable"
+        );
+    }
+
+    #[test]
+    fn test_quality_metrics_empty_spec() {
+        let spec = Specification::new("Empty".into());
+        let suite = TestSuite {
+            features: vec![],
+            source_spec_id: spec.id,
+            total_scenarios: 0,
+            coverage: TestCoverage {
+                requirements_covered: vec![],
+                requirements_total: 0,
+                coverage_percentage: 0.0,
+                scenarios_by_type: ScenarioCounts::default(),
+            },
+        };
+        let metrics = compute_quality_metrics(&spec, &suite);
+        // Avec 0 FR : completeness = 1.0, risk_coverage = 1.0
+        assert!((metrics.functional_completeness - 1.0).abs() < f64::EPSILON);
+        assert!((metrics.risk_coverage - 1.0).abs() < f64::EPSILON);
+        assert!(metrics.overall_score >= 0.0 && metrics.overall_score <= 1.0);
+    }
+
+    #[test]
+    fn test_ambiguous_word_boundary() {
+        // "some" ne doit PAS matcher dans "something" ou "awesome"
+        assert!(!contains_ambiguous_word("something happened", "some"));
+        assert!(!contains_ambiguous_word("awesome feature", "some"));
+        // "some" DOIT matcher en tant que mot isole
+        assert!(contains_ambiguous_word("handle some requests", "some"));
+        assert!(contains_ambiguous_word("some items remain", "some"));
+    }
+
+    #[test]
+    fn test_bidirectional_traceability_empty() {
+        let spec = Specification::new("Empty".into());
+        let suite = TestSuite {
+            features: vec![],
+            source_spec_id: spec.id,
+            total_scenarios: 0,
+            coverage: TestCoverage {
+                requirements_covered: vec![],
+                requirements_total: 0,
+                coverage_percentage: 0.0,
+                scenarios_by_type: ScenarioCounts::default(),
+            },
+        };
+        let report = check_bidirectional_traceability(&spec, &suite);
+        assert!((report.forward_coverage - 1.0).abs() < f64::EPSILON);
+        assert!((report.backward_coverage - 1.0).abs() < f64::EPSILON);
     }
 
     #[test]

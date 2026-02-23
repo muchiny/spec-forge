@@ -138,10 +138,10 @@ pub fn load_directory(dir: &Path) -> Vec<FileEntry> {
     let mut entries = Vec::new();
 
     // Entree parent (..)
-    if dir.parent().is_some() {
+    if let Some(parent) = dir.parent() {
         entries.push(FileEntry {
             name: "..".into(),
-            path: dir.parent().unwrap().to_path_buf(),
+            path: parent.to_path_buf(),
             is_dir: true,
             extension: String::new(),
         });
@@ -207,5 +207,124 @@ pub fn load_preview(path: &Path) -> Option<String> {
             let lines: Vec<&str> = content.lines().take(30).collect();
             lines.join("\n")
         }),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pretty_assertions::assert_eq;
+    use std::io::Write;
+    use tempfile::TempDir;
+
+    #[test]
+    fn test_load_directory_empty() {
+        let dir = TempDir::new().unwrap();
+        let entries = load_directory(dir.path());
+        // Doit avoir l'entree parent (..)
+        assert!(!entries.is_empty());
+        assert_eq!(entries[0].name, "..");
+        assert!(entries[0].is_dir);
+    }
+
+    #[test]
+    fn test_load_directory_with_files() {
+        let dir = TempDir::new().unwrap();
+        std::fs::write(dir.path().join("test.md"), "# Test").unwrap();
+        std::fs::write(dir.path().join("data.yaml"), "key: val").unwrap();
+        std::fs::create_dir(dir.path().join("subdir")).unwrap();
+
+        let entries = load_directory(dir.path());
+        // Parent + subdir + 2 files = 4
+        assert_eq!(entries.len(), 4);
+        // Parent en premier
+        assert_eq!(entries[0].name, "..");
+        // Dossiers avant fichiers
+        assert!(entries[1].is_dir);
+        assert_eq!(entries[1].name, "subdir");
+    }
+
+    #[test]
+    fn test_load_directory_hides_hidden_files() {
+        let dir = TempDir::new().unwrap();
+        std::fs::write(dir.path().join(".hidden"), "secret").unwrap();
+        std::fs::write(dir.path().join("visible.md"), "ok").unwrap();
+
+        let entries = load_directory(dir.path());
+        let names: Vec<&str> = entries.iter().map(|e| e.name.as_str()).collect();
+        assert!(
+            !names.contains(&".hidden"),
+            "Fichiers caches doivent etre masques"
+        );
+        assert!(names.contains(&"visible.md"));
+    }
+
+    #[test]
+    fn test_load_directory_sorts_alphabetically() {
+        let dir = TempDir::new().unwrap();
+        std::fs::write(dir.path().join("c.md"), "").unwrap();
+        std::fs::write(dir.path().join("a.md"), "").unwrap();
+        std::fs::write(dir.path().join("b.md"), "").unwrap();
+
+        let entries = load_directory(dir.path());
+        // Skip ".." entry
+        let file_names: Vec<&str> = entries[1..].iter().map(|e| e.name.as_str()).collect();
+        assert_eq!(file_names, vec!["a.md", "b.md", "c.md"]);
+    }
+
+    #[test]
+    fn test_load_preview_text_file() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("test.md");
+        let mut f = std::fs::File::create(&path).unwrap();
+        for i in 1..=50 {
+            writeln!(f, "Ligne {i}").unwrap();
+        }
+
+        let preview = load_preview(&path);
+        assert!(preview.is_some());
+        let text = preview.unwrap();
+        // Doit limiter a 30 lignes
+        assert!(text.contains("Ligne 1"));
+        assert!(text.contains("Ligne 30"));
+        assert!(!text.contains("Ligne 31"));
+    }
+
+    #[test]
+    fn test_load_preview_directory() {
+        let dir = TempDir::new().unwrap();
+        let preview = load_preview(dir.path());
+        assert!(preview.is_none());
+    }
+
+    #[test]
+    fn test_load_preview_unsupported_extension() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("test.txt");
+        std::fs::write(&path, "content").unwrap();
+
+        let preview = load_preview(&path);
+        assert_eq!(preview, Some("Format non supporte".into()));
+    }
+
+    #[test]
+    fn test_load_preview_pdf() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("doc.pdf");
+        std::fs::write(&path, "fake pdf").unwrap();
+
+        let preview = load_preview(&path);
+        assert!(preview.is_some());
+        assert!(preview.unwrap().contains("PDF non disponible"));
+    }
+
+    #[test]
+    fn test_supported_extensions() {
+        assert!(SUPPORTED_EXTENSIONS.contains(&"md"));
+        assert!(SUPPORTED_EXTENSIONS.contains(&"yaml"));
+        assert!(SUPPORTED_EXTENSIONS.contains(&"yml"));
+        assert!(SUPPORTED_EXTENSIONS.contains(&"pdf"));
+        assert!(SUPPORTED_EXTENSIONS.contains(&"docx"));
+        assert!(!SUPPORTED_EXTENSIONS.contains(&"txt"));
     }
 }
