@@ -29,8 +29,34 @@ jobs:
       - name: Vérifier le formatage
         run: cargo fmt --check
 
-      - name: Clippy
+      - name: Clippy (lib + CLI)
         run: cargo clippy --all-targets -- -D warnings
+
+      - name: Clippy (Tauri)
+        run: cargo clippy --all-targets -- -D warnings
+        working-directory: src-tauri
+
+  frontend:
+    name: Frontend (TypeScript + Build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Installer les dependances
+        working-directory: ui
+        run: npm ci
+
+      - name: Verification TypeScript
+        working-directory: ui
+        run: npx tsc --noEmit
+
+      - name: Build production
+        working-directory: ui
+        run: npx vite build
 
   test:
     name: Tests (${{ matrix.os }})

@@ -31,7 +31,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["deb", "appimage"],
+    "targets": "all",
     "icon": ["icons/32x32.png", "icons/128x128.png", "icons/icon.ico"],
     "shortDescription": "Transforme des User Stories en Specifications ISO 29148 et Tests Gherkin/BDD",
     "license": "MIT",
