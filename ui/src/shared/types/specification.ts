@@ -1,13 +1,47 @@
+// Types mirroring src/domain/specification.rs — must stay in sync
+
+export type Priority = "P1" | "P2" | "P3";
+
+export type SpecStatus = "Draft" | "NeedsClarification" | "Validated";
+
+export type VerificationMethod = "Inspection" | "Analysis" | "Demonstration" | "Test";
+
+export type RiskLevel = "High" | "Medium" | "Low";
+
+export type QualityCharacteristic =
+  | "FunctionalSuitability"
+  | "PerformanceEfficiency"
+  | "Compatibility"
+  | "InteractionCapability"
+  | "Reliability"
+  | "Security"
+  | "Maintainability"
+  | "Flexibility"
+  | "Safety";
+
+export type RequirementCategory = "Functional" | "NonFunctional" | "Constraint";
+
+// ComplianceProfile is a tagged enum in Rust:
+//   "General" | { "Aviation": "A"|"B"|... } | { "Medical": "A"|"B"|"C" } | ...
+// We model it as a discriminated union-friendly type.
+export type ComplianceProfile =
+  | "General"
+  | { Aviation: string }
+  | { Medical: string }
+  | { Automotive: string }
+  | { Railway: string }
+  | { Safety: string };
+
 export interface Specification {
   id: string;
   title: string;
   created_at: string;
-  status: "Draft" | "NeedsClarification" | "Validated";
+  status: SpecStatus;
   version: string;
   baseline: string | null;
   author: string | null;
   tool_version: string;
-  compliance_profile: string | null;
+  compliance_profile: ComplianceProfile | null;
   user_scenarios: UserScenario[];
   functional_requirements: FunctionalRequirement[];
   key_entities: KeyEntity[];
@@ -39,15 +73,15 @@ export interface FunctionalRequirement {
   id: string;
   statement: string;
   priority: Priority;
-  category: string;
+  category: RequirementCategory;
   testable: boolean;
   rationale: string | null;
   source: string | null;
-  verification_method: string;
-  risk_level: string | null;
+  verification_method: VerificationMethod;
+  risk_level: RiskLevel | null;
   parent_requirement: string | null;
   allocated_to: string[];
-  quality_characteristic: string | null;
+  quality_characteristic: QualityCharacteristic | null;
 }
 
 export interface KeyEntity {
@@ -60,36 +94,33 @@ export interface KeyEntity {
 export interface EdgeCase {
   description: string;
   related_scenario: string | null;
-  mitigation: string | null;
+  severity: Priority;
 }
 
 export interface SuccessCriterion {
-  criterion: string;
-  measurable: boolean;
-  metric: string | null;
+  id: string;
+  description: string;
+  measurable_metric: string;
 }
 
 export interface Clarification {
   question: string;
   context: string;
-  options: string[];
+  suggested_options: string[];
+  impact: string;
   resolved: boolean;
-  resolution: string | null;
+  answer: string | null;
 }
 
 export interface SpecValidation {
   completeness_score: number;
   clarity_score: number;
   testability_score: number;
-  iso_compliance: boolean;
-  issues: ValidationIssue[];
+  checklist_items: ChecklistItem[];
 }
 
-export interface ValidationIssue {
-  criterion: string;
-  severity: string;
-  message: string;
-  requirement_id: string | null;
+export interface ChecklistItem {
+  description: string;
+  passed: boolean;
+  category: string;
 }
-
-export type Priority = "P1" | "P2" | "P3";

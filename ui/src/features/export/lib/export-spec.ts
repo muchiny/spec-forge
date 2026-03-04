@@ -42,7 +42,7 @@ export function exportSpecification(spec: Specification, format: "csv" | "xlsx")
   const edgeRows = spec.edge_cases.map((ec) => ({
     Description: ec.description,
     "Scenario lie": ec.related_scenario ?? "",
-    Mitigation: ec.mitigation ?? "",
+    Severite: ec.severity,
   }));
   XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(edgeRows), "Cas limites");
 

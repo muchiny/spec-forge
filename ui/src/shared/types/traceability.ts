@@ -1,3 +1,18 @@
+// Types mirroring src/domain/traceability.rs — must stay in sync
+
+import type { Priority, RiskLevel, VerificationMethod } from "./specification";
+import type { CoverageTechnique } from "./test-suite";
+
+export type TraceabilityStatus =
+  | "FullyCovered"
+  | "PartiallyCovered"
+  | "NotCovered"
+  | "VerifiedByAnalysis"
+  | "VerifiedByInspection"
+  | "VerifiedByDemo";
+
+export type ComplianceStatus = "Compliant" | "PartiallyCompliant" | "NonCompliant";
+
 export interface TraceabilityMatrix {
   entries: TraceabilityEntry[];
   summary: TraceabilitySummary;
@@ -7,14 +22,14 @@ export interface TraceabilityMatrix {
 export interface TraceabilityEntry {
   requirement_id: string;
   statement: string;
-  priority: string;
-  risk_level: string | null;
+  priority: Priority;
+  risk_level: RiskLevel | null;
   source_stories: string[];
-  verification_method: string;
+  verification_method: VerificationMethod;
   covering_features: string[];
   covering_scenarios: string[];
-  coverage_techniques: string[];
-  status: string;
+  coverage_techniques: CoverageTechnique[];
+  status: TraceabilityStatus;
 }
 
 export interface TraceabilitySummary {
@@ -30,6 +45,6 @@ export interface TraceabilitySummary {
 export interface ComplianceNote {
   standard: string;
   section: string;
-  status: string;
+  status: ComplianceStatus;
   details: string;
 }

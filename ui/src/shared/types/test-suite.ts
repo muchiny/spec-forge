@@ -1,3 +1,18 @@
+// Types mirroring src/domain/test_case.rs — must stay in sync
+
+export type TestLevel = "Unit" | "Integration" | "System" | "Acceptance";
+
+export type CoverageTechnique =
+  | "EquivalencePartitioning"
+  | "BoundaryValueAnalysis"
+  | "DecisionTable"
+  | "StateTransition"
+  | "ErrorGuessing";
+
+export type ScenarioType = "HappyPath" | "EdgeCase" | "ErrorScenario" | "BoundaryCondition";
+
+export type StepKeyword = "Given" | "When" | "Then" | "And" | "But";
+
 export interface TestSuite {
   features: Feature[];
   source_spec_id: string;
@@ -14,7 +29,7 @@ export interface Feature {
   scenarios: Scenario[];
   source_scenario_ids: string[];
   covered_requirements: string[];
-  test_level: string;
+  test_level: TestLevel;
 }
 
 export interface Background {
@@ -24,23 +39,23 @@ export interface Background {
 export interface Scenario {
   name: string;
   tags: string[];
-  scenario_type: "HappyPath" | "EdgeCase" | "ErrorScenario";
+  scenario_type: ScenarioType;
   steps: Step[];
   examples: Examples | null;
   test_data_suggestions: string[];
   verification_of: string[];
-  coverage_technique: string | null;
+  coverage_technique: CoverageTechnique | null;
 }
 
 export interface Step {
-  keyword: string;
+  keyword: StepKeyword;
   text: string;
   doc_string: string | null;
   data_table: string[][] | null;
 }
 
 export interface Examples {
-  header: string[];
+  headers: string[];
   rows: string[][];
 }
 
@@ -55,4 +70,5 @@ export interface ScenarioCounts {
   happy_path: number;
   edge_case: number;
   error_scenario: number;
+  boundary: number;
 }

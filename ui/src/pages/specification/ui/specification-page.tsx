@@ -135,8 +135,8 @@ export function SpecificationPage() {
               )}>
                 <p className="text-text text-sm font-medium">{cl.question}</p>
                 <p className="text-subtext-0 mt-1 text-xs">{cl.context}</p>
-                {cl.resolved && cl.resolution && (
-                  <p className="text-green mt-2 text-xs">{cl.resolution}</p>
+                {cl.resolved && cl.answer && (
+                  <p className="text-green mt-2 text-xs">{cl.answer}</p>
                 )}
               </div>
             ))}

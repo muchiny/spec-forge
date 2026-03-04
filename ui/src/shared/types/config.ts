@@ -1,3 +1,5 @@
+// Types mirroring src/infrastructure/config.rs — must stay in sync
+
 export interface Config {
   pipeline: PipelineConfig;
   llm: LlmConfig;
@@ -6,6 +8,7 @@ export interface Config {
   validation: ValidationConfig;
   compliance: ComplianceConfig;
   logging: LoggingConfig;
+  paths: PathsConfig;
 }
 
 export interface PipelineConfig {
@@ -49,10 +52,21 @@ export interface ComplianceConfig {
   strict_validation: boolean;
   require_rationale: boolean;
   require_risk_level: boolean;
+  normative_keywords: boolean;
+  min_p1_coverage: number;
+  min_p2_coverage: number;
+  min_p3_coverage: number;
 }
 
 export interface LoggingConfig {
   level: string;
   format: string;
   colors: boolean;
+}
+
+export interface PathsConfig {
+  input_dir: string;
+  output_dir: string;
+  specs_dir: string;
+  features_dir: string;
 }
