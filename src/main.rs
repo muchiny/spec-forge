@@ -1,5 +1,4 @@
 //! spec-forge - Pipeline CLI pour transformer des User Stories en Specs et Tests Gherkin/BDD
-#![allow(dead_code)]
 
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -8,19 +7,12 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use console::style;
 
-mod adapters;
-mod application;
-mod domain;
-mod infrastructure;
-mod ports;
-mod tui;
-
-use adapters::llm::ollama_adapter::OllamaAdapter;
-use adapters::templates::file_template_engine::FileTemplateEngine;
-use application::pipeline::Pipeline;
-use infrastructure::config::Config;
-use infrastructure::logging;
-use ports::llm_service::LlmService;
+use spec_forge::adapters::llm::ollama_adapter::OllamaAdapter;
+use spec_forge::adapters::templates::file_template_engine::FileTemplateEngine;
+use spec_forge::application::pipeline::Pipeline;
+use spec_forge::infrastructure::config::Config;
+use spec_forge::infrastructure::logging;
+use spec_forge::ports::llm_service::LlmService;
 
 #[derive(Parser)]
 #[command(
@@ -36,16 +28,13 @@ struct Cli {
     #[arg(short, long, default_value = "config.yaml")]
     config: String,
 
-    /// Verbosité (-v, -vv, -vvv)
+    /// Verbosite (-v, -vv, -vvv)
     #[arg(short, long, action = clap::ArgAction::Count)]
     verbose: u8,
 }
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Lancer l'interface TUI interactive
-    Tui,
-
     /// Raffiner des User Stories en specification complete
     Refine {
         /// Fichier(s) ou dossier(s) d'entree (Markdown, YAML, PDF, DOCX)
@@ -110,15 +99,7 @@ async fn main() -> Result<()> {
         std::process::exit(1);
     }
 
-    // Si pas de sous-commande ou commande Tui → lancer la TUI
-    let command = match cli.command {
-        None | Some(Commands::Tui) => {
-            return tui::run(config).await;
-        }
-        Some(cmd) => cmd,
-    };
-
-    // Init logging (seulement pour le mode CLI)
+    // Init logging
     let mut log_config = config.logging.clone();
     match cli.verbose {
         1 => log_config.level = "debug".to_string(),
@@ -127,8 +108,18 @@ async fn main() -> Result<()> {
     }
     logging::init_logging(&log_config);
 
+    let command = match cli.command {
+        None => {
+            println!(
+                "{} Utilisez --help pour voir les commandes disponibles, ou lancez l'interface graphique avec 'cargo tauri dev'",
+                style(">>").cyan().bold()
+            );
+            return Ok(());
+        }
+        Some(cmd) => cmd,
+    };
+
     match command {
-        Commands::Tui => unreachable!("Tui est gere plus haut"),
         Commands::Check => {
             check_llm(&config).await?;
         }

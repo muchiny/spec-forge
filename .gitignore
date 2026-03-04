@@ -1,3 +1,10 @@
 /target
 /output
 fuzz/target
+
+# Frontend
+ui/node_modules/
+ui/dist/
+
+# Tauri
+src-tauri/target/

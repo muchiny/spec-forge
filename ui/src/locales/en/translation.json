@@ -1,0 +1,112 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "pipeline": "Pipeline",
+    "specification": "Specification",
+    "gherkin": "Gherkin Tests",
+    "traceability": "Traceability",
+    "settings": "Settings"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "newPipeline": "New Pipeline",
+    "viewSpec": "Specification",
+    "viewTests": "Gherkin Tests",
+    "viewTrace": "Traceability",
+    "status": "Current Status",
+    "noData": "No data yet. Run a pipeline to get started.",
+    "scenarios": "Scenarios",
+    "requirements": "Requirements",
+    "tests": "Tests"
+  },
+  "pipeline": {
+    "title": "Pipeline",
+    "inputFiles": "Input Files",
+    "addFiles": "Add Files",
+    "addFolder": "Add Folder",
+    "noFiles": "No files selected",
+    "outputDir": "Output Directory",
+    "constitution": "Constitution (optional)",
+    "constitutionPlaceholder": "Project principles and rules...",
+    "run": "Run Pipeline",
+    "running": "Pipeline running...",
+    "reset": "Reset",
+    "completed": "Pipeline completed successfully",
+    "failed": "Pipeline error: {{error}}",
+    "progress": "Progress",
+    "stages": {
+      "reading": "Reading files",
+      "refining": "Refining specifications",
+      "generating": "Generating tests",
+      "writing": "Writing output"
+    }
+  },
+  "spec": {
+    "noData": "No specification yet. Run a pipeline first.",
+    "tabs": {
+      "scenarios": "Scenarios",
+      "requirements": "Requirements",
+      "entities": "Entities",
+      "clarifications": "Clarifications"
+    },
+    "statement": "Statement",
+    "priority": "Priority",
+    "testable": "Testable",
+    "risk": "Risk"
+  },
+  "gherkin": {
+    "title": "Gherkin Tests",
+    "noData": "No tests generated. Run a pipeline first.",
+    "features": "Features"
+  },
+  "trace": {
+    "title": "Traceability Matrix",
+    "noData": "No matrix yet. Run a pipeline first.",
+    "covered": "Covered",
+    "partial": "Partial",
+    "notCovered": "Not Covered",
+    "coverage": "Coverage",
+    "statement": "Statement",
+    "priority": "Priority",
+    "verification": "Verification",
+    "scenarios": "Scenarios",
+    "status": "Status"
+  },
+  "settings": {
+    "title": "Settings",
+    "appearance": "Appearance",
+    "theme": "Theme",
+    "dark": "Dark",
+    "light": "Light",
+    "language": "Language",
+    "llm": "LLM Configuration",
+    "provider": "Provider",
+    "model": "Model",
+    "url": "URL",
+    "temperature": "Temperature",
+    "maxTokens": "Max Tokens",
+    "contextSize": "Context Size",
+    "pipeline": "Pipeline Configuration",
+    "defaultLanguage": "Default Language",
+    "maxRetries": "Max Retries",
+    "compliance": "Compliance Profile",
+    "gherkinLang": "Gherkin Language"
+  },
+  "llm": {
+    "checking": "Checking...",
+    "offline": "LLM offline"
+  },
+  "export": {
+    "button": "Export",
+    "csv": "Export CSV",
+    "xlsx": "Export XLSX"
+  },
+  "toast": {
+    "dismiss": "Dismiss"
+  },
+  "errors": {
+    "somethingWentWrong": "Something went wrong",
+    "unexpectedError": "Unexpected error",
+    "tryAgain": "Try Again"
+  }
+}

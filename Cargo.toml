@@ -6,6 +6,14 @@ rust-version = "1.93.1"
 description = "Pipeline CLI pour transformer des User Stories en Specifications et Tests Gherkin/BDD via LLM"
 license = "MIT"
 
+[lib]
+name = "spec_forge"
+path = "src/lib.rs"
+
+[[bin]]
+name = "spec-forge"
+path = "src/main.rs"
+
 [dependencies]
 # Async Runtime
 tokio = { version = "1", features = ["full"] }
@@ -45,9 +53,6 @@ regex = "1"
 # Terminal output
 console = "0.16"
 
-# TUI
-ratatui = "0.30"
-crossterm = "0.29"
 
 # Document parsing (PDF, DOCX)
 pdf-extract = "0.10"

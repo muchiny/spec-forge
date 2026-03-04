@@ -1,0 +1,112 @@
+{
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "pipeline": "Pipeline",
+    "specification": "Specification",
+    "gherkin": "Tests Gherkin",
+    "traceability": "Tracabilite",
+    "settings": "Parametres"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "newPipeline": "Nouveau pipeline",
+    "viewSpec": "Specification",
+    "viewTests": "Tests Gherkin",
+    "viewTrace": "Tracabilite",
+    "status": "Etat actuel",
+    "noData": "Aucune donnee. Lancez un pipeline pour commencer.",
+    "scenarios": "Scenarios",
+    "requirements": "Exigences",
+    "tests": "Tests"
+  },
+  "pipeline": {
+    "title": "Pipeline",
+    "inputFiles": "Fichiers d'entree",
+    "addFiles": "Ajouter des fichiers",
+    "addFolder": "Ajouter un dossier",
+    "noFiles": "Aucun fichier selectionne",
+    "outputDir": "Repertoire de sortie",
+    "constitution": "Constitution (optionnel)",
+    "constitutionPlaceholder": "Principes et regles du projet...",
+    "run": "Lancer le pipeline",
+    "running": "Pipeline en cours...",
+    "reset": "Reinitialiser",
+    "completed": "Pipeline termine avec succes",
+    "failed": "Erreur du pipeline : {{error}}",
+    "progress": "Progression",
+    "stages": {
+      "reading": "Lecture des fichiers",
+      "refining": "Raffinement des specifications",
+      "generating": "Generation des tests",
+      "writing": "Ecriture des fichiers"
+    }
+  },
+  "spec": {
+    "noData": "Aucune specification. Lancez un pipeline d'abord.",
+    "tabs": {
+      "scenarios": "Scenarios",
+      "requirements": "Exigences",
+      "entities": "Entites",
+      "clarifications": "Clarifications"
+    },
+    "statement": "Enonce",
+    "priority": "Priorite",
+    "testable": "Testable",
+    "risk": "Risque"
+  },
+  "gherkin": {
+    "title": "Tests Gherkin",
+    "noData": "Aucun test genere. Lancez un pipeline d'abord.",
+    "features": "Features"
+  },
+  "trace": {
+    "title": "Matrice de tracabilite",
+    "noData": "Aucune matrice. Lancez un pipeline d'abord.",
+    "covered": "Couvertes",
+    "partial": "Partielles",
+    "notCovered": "Non couvertes",
+    "coverage": "Couverture",
+    "statement": "Enonce",
+    "priority": "Priorite",
+    "verification": "Verification",
+    "scenarios": "Scenarios",
+    "status": "Statut"
+  },
+  "settings": {
+    "title": "Parametres",
+    "appearance": "Apparence",
+    "theme": "Theme",
+    "dark": "Sombre",
+    "light": "Clair",
+    "language": "Langue",
+    "llm": "Configuration LLM",
+    "provider": "Fournisseur",
+    "model": "Modele",
+    "url": "URL",
+    "temperature": "Temperature",
+    "maxTokens": "Tokens max",
+    "contextSize": "Taille contexte",
+    "pipeline": "Configuration Pipeline",
+    "defaultLanguage": "Langue par defaut",
+    "maxRetries": "Retentatives max",
+    "compliance": "Profil conformite",
+    "gherkinLang": "Langue Gherkin"
+  },
+  "llm": {
+    "checking": "Verification...",
+    "offline": "LLM hors ligne"
+  },
+  "export": {
+    "button": "Exporter",
+    "csv": "Exporter CSV",
+    "xlsx": "Exporter XLSX"
+  },
+  "toast": {
+    "dismiss": "Fermer"
+  },
+  "errors": {
+    "somethingWentWrong": "Une erreur est survenue",
+    "unexpectedError": "Erreur inattendue",
+    "tryAgain": "Reessayer"
+  }
+}
