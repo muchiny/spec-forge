@@ -15,8 +15,11 @@ pub async fn read_stories(
     state: State<'_, AppState>,
 ) -> Result<serde_json::Value, String> {
     let input_paths: Vec<PathBuf> = paths.iter().map(PathBuf::from).collect();
-    let story_set = state
-        .pipeline
+    let pipeline_guard = state.pipeline.read().await;
+    let pipeline = pipeline_guard
+        .as_ref()
+        .ok_or_else(|| "LLM non initialise".to_string())?;
+    let story_set = pipeline
         .read_stories_multi(&input_paths)
         .await
         .map_err(|e| e.to_string())?;

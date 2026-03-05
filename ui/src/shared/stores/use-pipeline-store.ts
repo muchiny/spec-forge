@@ -3,7 +3,12 @@ import type { Specification } from "@/shared/types/specification";
 import type { TestSuite } from "@/shared/types/test-suite";
 import type { TraceabilityMatrix } from "@/shared/types/traceability";
 
-export type PipelineStage = "ReadingInput" | "RefiningSpec" | "GeneratingTests" | "WritingOutput" | "Completed";
+export type PipelineStage =
+  | "ReadingInput"
+  | "RefiningSpec"
+  | "GeneratingTests"
+  | "WritingOutput"
+  | "Completed";
 export type PipelineStatus = "idle" | "running" | "completed" | "error";
 
 interface ProgressMessage {
@@ -34,7 +39,11 @@ interface PipelineStore {
   setConstitution: (text: string | null) => void;
   setPipelineRunning: (stage: PipelineStage) => void;
   addProgress: (msg: ProgressMessage) => void;
-  setPipelineCompleted: (spec: Specification, testSuite: TestSuite, traceability: TraceabilityMatrix) => void;
+  setPipelineCompleted: (
+    spec: Specification,
+    testSuite: TestSuite,
+    traceability: TraceabilityMatrix,
+  ) => void;
   setPipelineError: (error: string) => void;
   reset: () => void;
 }
@@ -51,12 +60,15 @@ export const usePipelineStore = create<PipelineStore>((set) => ({
   outputDir: "output",
   constitution: null,
 
-  addFile: (path) => set((s) => ({ selectedFiles: [...s.selectedFiles, path] })),
-  removeFile: (path) => set((s) => ({ selectedFiles: s.selectedFiles.filter((f) => f !== path) })),
+  addFile: (path) =>
+    set((s) => ({ selectedFiles: [...s.selectedFiles, path] })),
+  removeFile: (path) =>
+    set((s) => ({ selectedFiles: s.selectedFiles.filter((f) => f !== path) })),
   setFiles: (paths) => set({ selectedFiles: paths }),
   setOutputDir: (dir) => set({ outputDir: dir }),
   setConstitution: (text) => set({ constitution: text }),
-  setPipelineRunning: (stage) => set({ status: "running", currentStage: stage, error: null }),
+  setPipelineRunning: (stage) =>
+    set({ status: "running", currentStage: stage, error: null }),
   addProgress: (msg) =>
     set((s) => ({
       progressMessages: [...s.progressMessages, msg],

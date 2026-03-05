@@ -23,3 +23,17 @@ export interface LlmStatusResponse {
   provider: string;
   url: string;
 }
+
+export interface OllamaSystemStatus {
+  ollama_running: boolean;
+  model_name: string;
+  model_installed: boolean;
+  url: string;
+}
+
+export interface ModelPullProgressPayload {
+  status: string;
+  completed: number | null;
+  total: number | null;
+  digest: string | null;
+}

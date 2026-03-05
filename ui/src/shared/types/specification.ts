@@ -4,7 +4,11 @@ export type Priority = "P1" | "P2" | "P3";
 
 export type SpecStatus = "Draft" | "NeedsClarification" | "Validated";
 
-export type VerificationMethod = "Inspection" | "Analysis" | "Demonstration" | "Test";
+export type VerificationMethod =
+  | "Inspection"
+  | "Analysis"
+  | "Demonstration"
+  | "Test";
 
 export type RiskLevel = "High" | "Medium" | "Low";
 

@@ -15,17 +15,33 @@ const variantConfig: Record<
     text: "text-green",
     border: "border-green/30",
   },
-  error: { icon: XCircle, bg: "bg-red/20", text: "text-red", border: "border-red/30" },
+  error: {
+    icon: XCircle,
+    bg: "bg-red/20",
+    text: "text-red",
+    border: "border-red/30",
+  },
   warning: {
     icon: AlertTriangle,
     bg: "bg-yellow/20",
     text: "text-yellow",
     border: "border-yellow/30",
   },
-  info: { icon: Info, bg: "bg-blue/20", text: "text-blue", border: "border-blue/30" },
+  info: {
+    icon: Info,
+    bg: "bg-blue/20",
+    text: "text-blue",
+    border: "border-blue/30",
+  },
 };
 
-function ToastItem({ toast: toastItem, onDismiss }: { toast: Toast; onDismiss: () => void }) {
+function ToastItem({
+  toast: toastItem,
+  onDismiss,
+}: {
+  toast: Toast;
+  onDismiss: () => void;
+}) {
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -46,7 +62,12 @@ function ToastItem({ toast: toastItem, onDismiss }: { toast: Toast; onDismiss: (
         config.border,
       )}
     >
-      <div className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded-full", config.bg)}>
+      <div
+        className={cn(
+          "flex h-6 w-6 shrink-0 items-center justify-center rounded-full",
+          config.bg,
+        )}
+      >
         <Icon className={cn("h-3.5 w-3.5", config.text)} />
       </div>
       <p className="text-text min-w-0 flex-1 text-sm">{toastItem.message}</p>
@@ -73,7 +94,11 @@ export function ToastContainer() {
       className="fixed right-4 bottom-4 z-[100] flex w-80 flex-col gap-2"
     >
       {toasts.map((toastItem) => (
-        <ToastItem key={toastItem.id} toast={toastItem} onDismiss={() => dismiss(toastItem.id)} />
+        <ToastItem
+          key={toastItem.id}
+          toast={toastItem}
+          onDismiss={() => dismiss(toastItem.id)}
+        />
       ))}
     </div>
   );

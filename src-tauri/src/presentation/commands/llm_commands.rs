@@ -17,15 +17,28 @@ pub struct LlmStatusResponse {
 /// Verifie si le LLM est accessible
 #[tauri::command]
 pub async fn check_llm_status(state: State<'_, AppState>) -> Result<LlmStatusResponse, String> {
-    let config = state.llm.config();
-    let ready = state.llm.is_ready().await;
-
-    Ok(LlmStatusResponse {
-        ready,
-        model_name: config.model_name.clone(),
-        provider: config.provider.clone(),
-        url: config.api_base_url.clone(),
-    })
+    let llm_guard = state.llm.read().await;
+    match llm_guard.as_ref() {
+        Some(llm) => {
+            let config = llm.config();
+            let ready = llm.is_ready().await;
+            Ok(LlmStatusResponse {
+                ready,
+                model_name: config.model_name.clone(),
+                provider: config.provider.clone(),
+                url: config.api_base_url.clone(),
+            })
+        }
+        None => {
+            let config = state.config.read().await;
+            Ok(LlmStatusResponse {
+                ready: false,
+                model_name: config.llm.model_name.clone(),
+                provider: config.llm.provider.clone(),
+                url: config.llm.api_base_url.clone(),
+            })
+        }
+    }
 }
 
 /// Retourne la configuration LLM actuelle

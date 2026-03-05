@@ -39,8 +39,7 @@
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
 
-  --font-sans:
-    "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
@@ -73,6 +72,7 @@
   border-color: var(--color-border);
 }
 
+/* Standardized focus ring utility */
 @utility focus-ring {
   &:focus-visible {
     outline: 2px solid var(--color-blue);
@@ -89,6 +89,18 @@ body {
     color 0.2s ease;
 }
 
+/* Hide number input spinners */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -107,19 +119,65 @@ body {
   background: var(--color-overlay-0);
 }
 
+/* Firefox scrollbar */
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--color-surface-2) var(--color-mantle);
 }
 
+/* Animations */
 @keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes zoom-in-95 {
+  from {
+    transform: scale(0.95);
+  }
+  to {
+    transform: scale(1);
+  }
 }
 
 @keyframes slide-in-from-right {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 8px 0 currentColor;
+    opacity: 1;
+  }
+  50% {
+    box-shadow: 0 0 16px 4px currentColor;
+    opacity: 0.8;
+  }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes expand-down {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 1000px;
+  }
 }
 
 .animate-in {
@@ -131,14 +189,42 @@ body {
 .fade-in {
   animation-name: fade-in;
 }
-
+.zoom-in-95 {
+  animation-name: fade-in, zoom-in-95;
+}
 .slide-in-from-right {
   animation-name: fade-in, slide-in-from-right;
 }
+.expand-down {
+  animation: expand-down 250ms ease-out both;
+  overflow: hidden;
+}
 
+.duration-150 {
+  animation-duration: 150ms;
+}
+.duration-200 {
+  animation-duration: 200ms;
+}
+
+/* Accessibility: reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  .animate-in, .fade-in, .slide-in-from-right {
+  .animate-in,
+  .fade-in,
+  .zoom-in-95,
+  .slide-in-from-right,
+  .expand-down,
+  .pulse-glow {
     animation: none !important;
     transition: none !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

@@ -24,7 +24,10 @@ export function useExport() {
       const blob = exportTestSuite(suite, format);
       downloadBlob(blob, `test-suite.${format}`);
     },
-    exportTraceability: (matrix: TraceabilityMatrix, format: "csv" | "xlsx") => {
+    exportTraceability: (
+      matrix: TraceabilityMatrix,
+      format: "csv" | "xlsx",
+    ) => {
       const blob = exportTraceability(matrix, format);
       downloadBlob(blob, `traceability.${format}`);
     },

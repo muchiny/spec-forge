@@ -25,7 +25,11 @@ export function useRunPipeline() {
     successMessage: () => i18next.t("pipeline.completed"),
     errorMessage: (err) => i18next.t("pipeline.failed", { error: err.message }),
     onSuccess: (data) => {
-      setPipelineCompleted(data.specification, data.test_suite, data.traceability);
+      setPipelineCompleted(
+        data.specification,
+        data.test_suite,
+        data.traceability,
+      );
     },
   });
 }

@@ -1,5 +1,4 @@
 /target
-/output
 fuzz/target
 
 # Frontend
@@ -8,3 +7,5 @@ ui/dist/
 
 # Tauri
 src-tauri/target/
+node_modules/
+ui/tsconfig.tsbuildinfo

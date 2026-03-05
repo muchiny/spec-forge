@@ -9,7 +9,11 @@ export type CoverageTechnique =
   | "StateTransition"
   | "ErrorGuessing";
 
-export type ScenarioType = "HappyPath" | "EdgeCase" | "ErrorScenario" | "BoundaryCondition";
+export type ScenarioType =
+  | "HappyPath"
+  | "EdgeCase"
+  | "ErrorScenario"
+  | "BoundaryCondition";
 
 export type StepKeyword = "Given" | "When" | "Then" | "And" | "But";
 

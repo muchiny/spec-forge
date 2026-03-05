@@ -4138,6 +4138,7 @@ dependencies = [
  "clap",
  "config",
  "console",
+ "futures-util",
  "handlebars",
  "pdf-extract",
  "quick-xml 0.39.2",

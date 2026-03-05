@@ -33,7 +33,9 @@ export function useTauriMutation<TData = void, TVariables = void>({
       }
       if (successMessage) {
         const msg =
-          typeof successMessage === "function" ? successMessage(data, variables) : successMessage;
+          typeof successMessage === "function"
+            ? successMessage(data, variables)
+            : successMessage;
         toast.success(msg);
       }
       onSuccess?.(data, variables);
@@ -41,7 +43,9 @@ export function useTauriMutation<TData = void, TVariables = void>({
     onError: (err, variables) => {
       if (errorMessage) {
         const msg =
-          typeof errorMessage === "function" ? errorMessage(err, variables) : errorMessage;
+          typeof errorMessage === "function"
+            ? errorMessage(err, variables)
+            : errorMessage;
         toast.error(msg);
       } else {
         toast.error(err.message);

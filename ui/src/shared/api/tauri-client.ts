@@ -9,7 +9,10 @@ export function onIpcTiming(callback: IpcTimingCallback) {
   _onIpcTiming = callback;
 }
 
-export async function tauriInvoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
+export async function tauriInvoke<T>(
+  cmd: string,
+  args?: Record<string, unknown>,
+): Promise<T> {
   const start = _onIpcTiming ? performance.now() : 0;
   try {
     const result = await invoke<T>(cmd, args);

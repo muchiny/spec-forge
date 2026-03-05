@@ -3,6 +3,7 @@
 //! Porte depuis mcp-doc-rag avec ajout du support format:"json".
 
 use async_trait::async_trait;
+use futures_util::StreamExt;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
@@ -67,6 +68,18 @@ struct OllamaModel {
     name: String,
 }
 
+/// Progression du pull d'un modele Ollama
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct OllamaPullProgress {
+    pub status: String,
+    #[serde(default)]
+    pub digest: Option<String>,
+    #[serde(default)]
+    pub total: Option<u64>,
+    #[serde(default)]
+    pub completed: Option<u64>,
+}
+
 /// Adapter pour Ollama (LLM local)
 pub struct OllamaAdapter {
     client: Client,
@@ -124,6 +137,120 @@ impl OllamaAdapter {
             .next()
             .unwrap_or(&self.config.model_name);
         Ok(tags.models.iter().any(|m| m.name.starts_with(model_name)))
+    }
+
+    /// Verifie si le serveur Ollama est accessible
+    pub async fn check_server(&self) -> bool {
+        let url = format!("{}/api/tags", self.config.api_base_url);
+        match self.client.get(&url).send().await {
+            Ok(resp) => resp.status().is_success(),
+            Err(_) => false,
+        }
+    }
+
+    /// Liste les modeles disponibles sur le serveur Ollama
+    pub async fn list_models(&self) -> Result<Vec<String>, LlmError> {
+        let url = format!("{}/api/tags", self.config.api_base_url);
+        let response = self
+            .client
+            .get(&url)
+            .send()
+            .await
+            .map_err(|e| LlmError::ConnectionError(e.to_string()))?;
+
+        if !response.status().is_success() {
+            return Err(LlmError::ApiError {
+                status_code: response.status().as_u16(),
+                message: "Impossible de lister les modeles".to_string(),
+            });
+        }
+
+        let tags: OllamaTagsResponse = response
+            .json()
+            .await
+            .map_err(|e| LlmError::ParseError(e.to_string()))?;
+
+        Ok(tags.models.into_iter().map(|m| m.name).collect())
+    }
+
+    /// Telecharge un modele via POST /api/pull (streaming)
+    ///
+    /// - `cancel_rx` : canal watch pour annuler le pull
+    /// - `on_progress` : callback appele pour chaque chunk de progression
+    pub async fn pull_model<F>(
+        &self,
+        model_name: &str,
+        mut cancel_rx: tokio::sync::watch::Receiver<bool>,
+        on_progress: F,
+    ) -> Result<(), LlmError>
+    where
+        F: Fn(OllamaPullProgress) + Send + 'static,
+    {
+        let url = format!("{}/api/pull", self.config.api_base_url);
+
+        info!(model = %model_name, "Debut du pull du modele");
+
+        // Client avec timeout long pour les gros modeles
+        let pull_client = Client::builder()
+            .timeout(Duration::from_secs(3600))
+            .build()
+            .map_err(|e| LlmError::ConnectionError(e.to_string()))?;
+
+        let response = pull_client
+            .post(&url)
+            .json(&serde_json::json!({
+                "name": model_name,
+                "stream": true,
+            }))
+            .send()
+            .await
+            .map_err(|e| LlmError::ConnectionError(e.to_string()))?;
+
+        if !response.status().is_success() {
+            let error_body = response
+                .text()
+                .await
+                .unwrap_or_else(|_| "Erreur inconnue".to_string());
+            return Err(LlmError::ApiError {
+                status_code: 0,
+                message: format!("Echec du pull: {error_body}"),
+            });
+        }
+
+        let mut stream = response.bytes_stream();
+
+        loop {
+            tokio::select! {
+                chunk_opt = stream.next() => {
+                    match chunk_opt {
+                        Some(Ok(chunk)) => {
+                            let text = String::from_utf8_lossy(&chunk);
+                            for line in text.lines() {
+                                if line.trim().is_empty() {
+                                    continue;
+                                }
+                                if let Ok(progress) = serde_json::from_str::<OllamaPullProgress>(line) {
+                                    on_progress(progress);
+                                }
+                            }
+                        }
+                        Some(Err(e)) => {
+                            return Err(LlmError::ConnectionError(e.to_string()));
+                        }
+                        None => break,
+                    }
+                }
+                _ = cancel_rx.changed() => {
+                    if *cancel_rx.borrow() {
+                        info!(model = %model_name, "Pull annule par l'utilisateur");
+                        return Err(LlmError::ConnectionError("Pull annule".to_string()));
+                    }
+                }
+            }
+        }
+
+        info!(model = %model_name, "Pull du modele termine");
+        Ok(())
     }
 
     /// Appel interne a l'API generate

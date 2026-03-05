@@ -11,7 +11,10 @@ export type TraceabilityStatus =
   | "VerifiedByInspection"
   | "VerifiedByDemo";
 
-export type ComplianceStatus = "Compliant" | "PartiallyCompliant" | "NonCompliant";
+export type ComplianceStatus =
+  | "Compliant"
+  | "PartiallyCompliant"
+  | "NonCompliant";
 
 export interface TraceabilityMatrix {
   entries: TraceabilityEntry[];

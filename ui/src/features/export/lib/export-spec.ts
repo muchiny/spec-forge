@@ -1,7 +1,10 @@
 import * as XLSX from "xlsx";
 import type { Specification } from "@/shared/types/specification";
 
-export function exportSpecification(spec: Specification, format: "csv" | "xlsx"): Blob {
+export function exportSpecification(
+  spec: Specification,
+  format: "csv" | "xlsx",
+): Blob {
   const workbook = XLSX.utils.book_new();
 
   // Sheet 1: Scenarios
@@ -13,7 +16,11 @@ export function exportSpecification(spec: Specification, format: "csv" | "xlsx")
     "Justification priorite": us.why_priority,
     "Test independant": us.independent_test,
   }));
-  XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(scenarioRows), "Scenarios");
+  XLSX.utils.book_append_sheet(
+    workbook,
+    XLSX.utils.json_to_sheet(scenarioRows),
+    "Scenarios",
+  );
 
   // Sheet 2: Exigences
   const reqRows = spec.functional_requirements.map((fr) => ({
@@ -27,7 +34,11 @@ export function exportSpecification(spec: Specification, format: "csv" | "xlsx")
     Justification: fr.rationale ?? "",
     Qualite: fr.quality_characteristic ?? "",
   }));
-  XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(reqRows), "Exigences");
+  XLSX.utils.book_append_sheet(
+    workbook,
+    XLSX.utils.json_to_sheet(reqRows),
+    "Exigences",
+  );
 
   // Sheet 3: Entites
   const entityRows = spec.key_entities.map((e) => ({
@@ -36,7 +47,11 @@ export function exportSpecification(spec: Specification, format: "csv" | "xlsx")
     Attributs: e.attributes.join(", "),
     Relations: e.relationships.join(", "),
   }));
-  XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(entityRows), "Entites");
+  XLSX.utils.book_append_sheet(
+    workbook,
+    XLSX.utils.json_to_sheet(entityRows),
+    "Entites",
+  );
 
   // Sheet 4: Cas limites
   const edgeRows = spec.edge_cases.map((ec) => ({
@@ -44,7 +59,11 @@ export function exportSpecification(spec: Specification, format: "csv" | "xlsx")
     "Scenario lie": ec.related_scenario ?? "",
     Severite: ec.severity,
   }));
-  XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(edgeRows), "Cas limites");
+  XLSX.utils.book_append_sheet(
+    workbook,
+    XLSX.utils.json_to_sheet(edgeRows),
+    "Cas limites",
+  );
 
   if (format === "csv") {
     return new Blob([XLSX.utils.sheet_to_csv(workbook.Sheets["Exigences"]!)], {

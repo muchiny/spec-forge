@@ -1,7 +1,10 @@
 import * as XLSX from "xlsx";
 import type { TestSuite } from "@/shared/types/test-suite";
 
-export function exportTestSuite(suite: TestSuite, format: "csv" | "xlsx"): Blob {
+export function exportTestSuite(
+  suite: TestSuite,
+  format: "csv" | "xlsx",
+): Blob {
   const workbook = XLSX.utils.book_new();
 
   // Sheet 1: Features
@@ -13,7 +16,11 @@ export function exportTestSuite(suite: TestSuite, format: "csv" | "xlsx"): Blob 
     "Exigences couvertes": f.covered_requirements.join(", "),
     "Nombre scenarios": f.scenarios.length,
   }));
-  XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(featureRows), "Features");
+  XLSX.utils.book_append_sheet(
+    workbook,
+    XLSX.utils.json_to_sheet(featureRows),
+    "Features",
+  );
 
   // Sheet 2: Scenarios
   const scenarioRows = suite.features.flatMap((f) =>
@@ -27,7 +34,11 @@ export function exportTestSuite(suite: TestSuite, format: "csv" | "xlsx"): Blob 
       Etapes: s.steps.map((st) => `${st.keyword} ${st.text}`).join(" | "),
     })),
   );
-  XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(scenarioRows), "Scenarios");
+  XLSX.utils.book_append_sheet(
+    workbook,
+    XLSX.utils.json_to_sheet(scenarioRows),
+    "Scenarios",
+  );
 
   if (format === "csv") {
     return new Blob([XLSX.utils.sheet_to_csv(workbook.Sheets["Scenarios"]!)], {

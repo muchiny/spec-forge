@@ -1,7 +1,10 @@
 import * as XLSX from "xlsx";
 import type { TraceabilityMatrix } from "@/shared/types/traceability";
 
-export function exportTraceability(matrix: TraceabilityMatrix, format: "csv" | "xlsx"): Blob {
+export function exportTraceability(
+  matrix: TraceabilityMatrix,
+  format: "csv" | "xlsx",
+): Blob {
   const workbook = XLSX.utils.book_new();
 
   // Sheet 1: Matrice
@@ -16,7 +19,11 @@ export function exportTraceability(matrix: TraceabilityMatrix, format: "csv" | "
     Techniques: e.coverage_techniques.join(", "),
     Statut: e.status,
   }));
-  XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(rows), "Matrice");
+  XLSX.utils.book_append_sheet(
+    workbook,
+    XLSX.utils.json_to_sheet(rows),
+    "Matrice",
+  );
 
   // Sheet 2: Resume
   const summary = [
@@ -29,7 +36,11 @@ export function exportTraceability(matrix: TraceabilityMatrix, format: "csv" | "
       "Tests orphelins": matrix.summary.orphan_tests.join(", "),
     },
   ];
-  XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(summary), "Resume");
+  XLSX.utils.book_append_sheet(
+    workbook,
+    XLSX.utils.json_to_sheet(summary),
+    "Resume",
+  );
 
   if (format === "csv") {
     return new Blob([XLSX.utils.sheet_to_csv(workbook.Sheets["Matrice"]!)], {

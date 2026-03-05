@@ -1,14 +1,26 @@
 {
+  "header": {
+    "skipToContent": "Skip to content",
+    "subtitle": "ISO 29148 Spec Generator",
+    "toggleTheme": "Toggle theme",
+    "toggleLanguage": "Toggle language",
+    "switchLanguage": "Switch language",
+    "minimize": "Minimize",
+    "maximize": "Maximize",
+    "restore": "Restore",
+    "close": "Close"
+  },
   "nav": {
     "dashboard": "Dashboard",
     "pipeline": "Pipeline",
-    "specification": "Specification",
-    "gherkin": "Gherkin Tests",
-    "traceability": "Traceability",
+    "specification": "Spec",
+    "gherkin": "Gherkin",
+    "traceability": "Trace",
     "settings": "Settings"
   },
   "dashboard": {
     "title": "Dashboard",
+    "subtitle": "Overview and quick actions",
     "newPipeline": "New Pipeline",
     "viewSpec": "Specification",
     "viewTests": "Gherkin Tests",
@@ -21,11 +33,13 @@
   },
   "pipeline": {
     "title": "Pipeline",
+    "subtitle": "Transform user stories into specifications and tests",
     "inputFiles": "Input Files",
     "addFiles": "Add Files",
     "addFolder": "Add Folder",
     "noFiles": "No files selected",
     "outputDir": "Output Directory",
+    "browse": "Browse",
     "constitution": "Constitution (optional)",
     "constitutionPlaceholder": "Project principles and rules...",
     "run": "Run Pipeline",
@@ -34,6 +48,9 @@
     "completed": "Pipeline completed successfully",
     "failed": "Pipeline error: {{error}}",
     "progress": "Progress",
+    "processing": "Processing...",
+    "stageComplete": "Done",
+    "showLog": "Show logs",
     "stages": {
       "reading": "Reading files",
       "refining": "Refining specifications",
@@ -66,6 +83,8 @@
     "partial": "Partial",
     "notCovered": "Not Covered",
     "coverage": "Coverage",
+    "requirements": "requirements",
+    "complianceNotes": "Compliance Notes",
     "statement": "Statement",
     "priority": "Priority",
     "verification": "Verification",
@@ -74,6 +93,7 @@
   },
   "settings": {
     "title": "Settings",
+    "subtitle": "Application configuration",
     "appearance": "Appearance",
     "theme": "Theme",
     "dark": "Dark",
@@ -94,7 +114,15 @@
   },
   "llm": {
     "checking": "Checking...",
-    "offline": "LLM offline"
+    "offline": "LLM offline",
+    "notRunning": "Ollama not running",
+    "modelMissing": "Model missing",
+    "install": "Install",
+    "cancel": "Cancel",
+    "pulling": "Downloading...",
+    "pullComplete": "Model installed",
+    "pullError": "Download error",
+    "error": "LLM error"
   },
   "export": {
     "button": "Export",

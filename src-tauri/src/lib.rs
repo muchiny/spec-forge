@@ -6,7 +6,9 @@ use std::sync::Arc;
 
 use tauri::Manager;
 
-use presentation::commands::{config_commands, file_commands, llm_commands, pipeline_commands};
+use presentation::commands::{
+    config_commands, file_commands, llm_commands, model_commands, pipeline_commands,
+};
 use presentation::state::AppState;
 
 use spec_forge::adapters::llm::ollama_adapter::OllamaAdapter;
@@ -30,29 +32,62 @@ pub fn run() {
                 Config::default()
             });
 
-            let llm: Arc<dyn spec_forge::ports::llm_service::LlmService> =
-                Arc::new(OllamaAdapter::new(config.llm.clone()).map_err(|e| {
-                    tracing::error!("Erreur initialisation OllamaAdapter: {e}");
-                    e.to_string()
-                })?);
+            // Resoudre le chemin des templates (relatif au repertoire de l'executable)
+            let template_dir = if config.templates.directory.is_relative() {
+                let exe_dir = std::env::current_exe()
+                    .ok()
+                    .and_then(|p| p.parent().map(|d| d.to_path_buf()));
 
-            let templates = Arc::new(
-                FileTemplateEngine::new(&config.templates.directory).map_err(|e| {
+                // Chercher d'abord a cote de l'exe, puis dans le cwd, puis remonter d'un niveau (dev)
+                let candidates = [
+                    exe_dir.as_ref().map(|d| d.join(&config.templates.directory)),
+                    Some(config.templates.directory.clone()),
+                    Some(std::path::PathBuf::from("..").join(&config.templates.directory)),
+                ];
+
+                candidates
+                    .into_iter()
+                    .flatten()
+                    .find(|p| p.exists())
+                    .unwrap_or_else(|| config.templates.directory.clone())
+            } else {
+                config.templates.directory.clone()
+            };
+
+            tracing::info!("Repertoire templates: {}", template_dir.display());
+
+            // Templates restent fatales (erreur de packaging)
+            let templates: Arc<dyn spec_forge::ports::template_engine::TemplateEngine> = Arc::new(
+                FileTemplateEngine::new(&template_dir).map_err(|e| {
                     tracing::error!("Erreur chargement templates: {e}");
                     e.to_string()
                 })?,
             );
 
-            let pipeline = Arc::new(Pipeline::new(
-                llm.clone(),
-                templates,
-                config.clone(),
-            ));
+            // LLM et Pipeline : non-fatals si Ollama indisponible
+            let (llm, pipeline) = match OllamaAdapter::new(config.llm.clone()) {
+                Ok(adapter) => {
+                    let llm: Arc<dyn spec_forge::ports::llm_service::LlmService> =
+                        Arc::new(adapter);
+                    let pipeline =
+                        Arc::new(Pipeline::new(llm.clone(), templates.clone(), config.clone()));
+                    (Some(llm), Some(pipeline))
+                }
+                Err(e) => {
+                    tracing::warn!(
+                        "Ollama indisponible au demarrage ({e}), \
+                         l'application demarre sans LLM"
+                    );
+                    (None, None)
+                }
+            };
 
             let app_state = AppState {
-                pipeline,
-                llm,
+                pipeline: Arc::new(tokio::sync::RwLock::new(pipeline)),
+                llm: Arc::new(tokio::sync::RwLock::new(llm)),
                 config: Arc::new(tokio::sync::RwLock::new(config)),
+                templates,
+                pull_cancel: Arc::new(tokio::sync::RwLock::new(None)),
             };
 
             app.manage(app_state);
@@ -68,6 +103,10 @@ pub fn run() {
             file_commands::expand_input_paths,
             pipeline_commands::run_full_pipeline,
             pipeline_commands::build_traceability,
+            model_commands::check_ollama_system,
+            model_commands::pull_model,
+            model_commands::cancel_pull,
+            model_commands::initialize_llm,
         ])
         .run(tauri::generate_context!())
         .expect("Erreur lors du lancement de l'application Tauri");

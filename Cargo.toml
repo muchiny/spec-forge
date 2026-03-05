@@ -40,7 +40,8 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 config = "0.15"
 
 # HTTP client (pour API LLM)
-reqwest = { version = "0.13", features = ["json"] }
+reqwest = { version = "0.13", features = ["json", "stream"] }
+futures-util = "0.3"
 
 # Template rendering
 handlebars = "6"
