@@ -1,7 +1,7 @@
 import { exportSpecification } from "../lib/export-spec";
 import { exportTestSuite } from "../lib/export-tests";
 import { exportTraceability } from "../lib/export-traceability";
-import { exportAll } from "../lib/export-all";
+import { exportAllXlsx, exportAllMarkdown } from "../lib/export-all";
 import type { Specification } from "@/shared/types/specification";
 import type { TestSuite } from "@/shared/types/test-suite";
 import type { TraceabilityMatrix } from "@/shared/types/traceability";
@@ -37,9 +37,11 @@ export function useExport() {
       suite: TestSuite,
       traceability: TraceabilityMatrix,
     ) => {
-      const blob = exportAll(spec, suite, traceability);
       const date = new Date().toISOString().slice(0, 10);
-      downloadBlob(blob, `spec-forge-export-${date}.xlsx`);
+      const xlsxBlob = exportAllXlsx(spec, suite, traceability);
+      downloadBlob(xlsxBlob, `spec-forge-export-${date}.xlsx`);
+      const mdBlob = exportAllMarkdown(spec, suite, traceability);
+      downloadBlob(mdBlob, `spec-forge-export-${date}.md`);
     },
   };
 }
