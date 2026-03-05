@@ -93,7 +93,7 @@ describe("usePipelineStore", () => {
 
     const state = usePipelineStore.getState();
     expect(state.progressMessages).toHaveLength(1);
-    expect(state.progressMessages[0].stage).toBe("RefiningSpec");
+    expect(state.progressMessages[0]?.stage).toBe("RefiningSpec");
     expect(state.currentStage).toBe("RefiningSpec");
   });
 

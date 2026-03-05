@@ -271,7 +271,7 @@ export function ProgressPanel() {
                         <span className="text-subtext-0 text-xs">
                           {progressMessages.length > 0
                             ? progressMessages[progressMessages.length - 1]
-                                .message
+                                ?.message
                             : t("pipeline.processing")}
                         </span>
                       </div>

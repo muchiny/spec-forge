@@ -22,14 +22,14 @@ describe("useTauriMutation", () => {
     );
 
     await act(async () => {
-      result.current.mutate();
+      result.current.mutate(undefined as never);
     });
 
     await waitFor(() => {
       const toasts = useToastStore.getState().toasts;
       expect(toasts).toHaveLength(1);
-      expect(toasts[0].variant).toBe("success");
-      expect(toasts[0].message).toBe("Done!");
+      expect(toasts[0]?.variant).toBe("success");
+      expect(toasts[0]?.message).toBe("Done!");
     });
   });
 
@@ -41,14 +41,14 @@ describe("useTauriMutation", () => {
     });
 
     await act(async () => {
-      result.current.mutate();
+      result.current.mutate(undefined as never);
     });
 
     await waitFor(() => {
       const toasts = useToastStore.getState().toasts;
       expect(toasts).toHaveLength(1);
-      expect(toasts[0].variant).toBe("error");
-      expect(toasts[0].message).toBe("Network error");
+      expect(toasts[0]?.variant).toBe("error");
+      expect(toasts[0]?.message).toBe("Network error");
     });
   });
 
@@ -65,11 +65,11 @@ describe("useTauriMutation", () => {
     );
 
     await act(async () => {
-      result.current.mutate();
+      result.current.mutate(undefined as never);
     });
 
     await waitFor(() => {
-      expect(useToastStore.getState().toasts[0].message).toBe("Custom error");
+      expect(useToastStore.getState().toasts[0]?.message).toBe("Custom error");
     });
   });
 
@@ -86,11 +86,11 @@ describe("useTauriMutation", () => {
     );
 
     await act(async () => {
-      result.current.mutate();
+      result.current.mutate(undefined as never);
     });
 
     await waitFor(() => {
-      expect(useToastStore.getState().toasts[0].message).toBe("Error: err");
+      expect(useToastStore.getState().toasts[0]?.message).toBe("Error: err");
     });
   });
 
@@ -104,7 +104,7 @@ describe("useTauriMutation", () => {
     );
 
     await act(async () => {
-      result.current.mutate();
+      result.current.mutate(undefined as never);
     });
 
     await waitFor(() => {
@@ -125,11 +125,11 @@ describe("useTauriMutation", () => {
     );
 
     await act(async () => {
-      result.current.mutate();
+      result.current.mutate(undefined as never);
     });
 
     await waitFor(() => {
-      expect(useToastStore.getState().toasts[0].message).toBe(
+      expect(useToastStore.getState().toasts[0]?.message).toBe(
         "Got: result-data",
       );
     });
