@@ -32,6 +32,11 @@ jobs:
       - name: Clippy (lib + CLI)
         run: cargo clippy --all-targets -- -D warnings
 
+      - name: Installer les dépendances système (Tauri)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libglib2.0-dev
+
       - name: Clippy (Tauri)
         run: cargo clippy --all-targets -- -D warnings
         working-directory: src-tauri
@@ -111,6 +116,9 @@ jobs:
   security:
     name: Audit sécurité
     runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
