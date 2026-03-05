@@ -27,10 +27,21 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .setup(move |app| {
-            let config = Config::load().unwrap_or_else(|_| {
+            // Chercher config.yaml : d'abord dans le CWD, sinon dans le parent (cargo tauri dev)
+            let config = if std::path::Path::new("config.yaml").exists() {
+                Config::load().unwrap_or_default()
+            } else if std::path::Path::new("../config.yaml").exists() {
+                Config::load_from_file("../config").unwrap_or_default()
+            } else {
                 tracing::warn!("config.yaml non trouve, utilisation des valeurs par defaut");
                 Config::default()
-            });
+            };
+            tracing::info!(
+                max_tokens = config.llm.max_tokens,
+                context_size = config.llm.context_size,
+                timeout_secs = config.llm.timeout_secs,
+                "Configuration LLM chargee"
+            );
 
             // Resoudre le chemin des templates (relatif au repertoire de l'executable)
             let template_dir = if config.templates.directory.is_relative() {

@@ -1,13 +1,20 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Download, ChevronDown, FileSpreadsheet, FileText } from "lucide-react";
+import {
+  Download,
+  ChevronDown,
+  FileSpreadsheet,
+  FileText,
+  Package,
+} from "lucide-react";
 import { cn } from "@/shared/lib/utils";
 
 interface ExportButtonProps {
   onExport: (format: "csv" | "xlsx") => void;
+  onExportAll?: () => void;
 }
 
-export function ExportButton({ onExport }: ExportButtonProps) {
+export function ExportButton({ onExport, onExportAll }: ExportButtonProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
@@ -54,6 +61,22 @@ export function ExportButton({ onExport }: ExportButtonProps) {
             <FileSpreadsheet className="text-green h-3.5 w-3.5" />
             {t("export.xlsx")}
           </button>
+          {onExportAll && (
+            <>
+              <div className="bg-surface-1 my-1 h-px" />
+              <button
+                data-testid="export-all"
+                onClick={() => {
+                  onExportAll();
+                  setOpen(false);
+                }}
+                className="text-text hover:bg-surface-0 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold transition-colors"
+              >
+                <Package className="text-blue h-3.5 w-3.5" />
+                {t("export.all")}
+              </button>
+            </>
+          )}
         </div>
       )}
     </div>

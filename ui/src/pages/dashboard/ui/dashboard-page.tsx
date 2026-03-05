@@ -13,6 +13,8 @@ import {
 import { cn } from "@/shared/lib/utils";
 import { LlmStatusBadge } from "@/features/llm-status/ui/llm-status-badge";
 import { usePipelineStore } from "@/shared/stores/use-pipeline-store";
+import { ExportButton } from "@/features/export/ui/export-button";
+import { useExport } from "@/features/export/hooks/use-export";
 
 const quickActions = [
   {
@@ -75,7 +77,9 @@ export function DashboardPage() {
   const { t } = useTranslation();
   const spec = usePipelineStore((s) => s.specification);
   const suite = usePipelineStore((s) => s.testSuite);
+  const traceability = usePipelineStore((s) => s.traceability);
   const status = usePipelineStore((s) => s.status);
+  const { exportAllData } = useExport();
 
   return (
     <div data-testid="dashboard-page" className="min-w-0 space-y-6">
@@ -161,44 +165,56 @@ export function DashboardPage() {
         )}
 
         {status === "completed" && spec != null && suite != null && (
-          <div data-testid="dashboard-stats" className="grid grid-cols-3 gap-4">
-            {[
-              {
-                value: spec.user_scenarios?.length ?? 0,
-                label: "dashboard.scenarios",
-                color: "text-blue",
-                bg: "bg-blue/10",
-                borderColor: "border-blue/20",
-              },
-              {
-                value: spec.functional_requirements?.length ?? 0,
-                label: "dashboard.requirements",
-                color: "text-green",
-                bg: "bg-green/10",
-                borderColor: "border-green/20",
-              },
-              {
-                value: suite.total_scenarios ?? 0,
-                label: "dashboard.tests",
-                color: "text-mauve",
-                bg: "bg-mauve/10",
-                borderColor: "border-mauve/20",
-              },
-            ].map((stat) => (
-              <div
-                key={stat.label}
-                className={cn(
-                  "rounded-xl border p-4 text-center transition-all duration-200",
-                  stat.bg,
-                  stat.borderColor,
-                )}
-              >
-                <p className={cn("text-3xl font-bold", stat.color)}>
-                  {stat.value}
-                </p>
-                <p className="text-subtext-0 mt-1 text-xs">{t(stat.label)}</p>
-              </div>
-            ))}
+          <div className="space-y-4">
+            <div data-testid="dashboard-stats" className="grid grid-cols-3 gap-4">
+              {[
+                {
+                  value: spec.user_scenarios?.length ?? 0,
+                  label: "dashboard.scenarios",
+                  color: "text-blue",
+                  bg: "bg-blue/10",
+                  borderColor: "border-blue/20",
+                },
+                {
+                  value: spec.functional_requirements?.length ?? 0,
+                  label: "dashboard.requirements",
+                  color: "text-green",
+                  bg: "bg-green/10",
+                  borderColor: "border-green/20",
+                },
+                {
+                  value: suite.total_scenarios ?? 0,
+                  label: "dashboard.tests",
+                  color: "text-mauve",
+                  bg: "bg-mauve/10",
+                  borderColor: "border-mauve/20",
+                },
+              ].map((stat) => (
+                <div
+                  key={stat.label}
+                  className={cn(
+                    "rounded-xl border p-4 text-center transition-all duration-200",
+                    stat.bg,
+                    stat.borderColor,
+                  )}
+                >
+                  <p className={cn("text-3xl font-bold", stat.color)}>
+                    {stat.value}
+                  </p>
+                  <p className="text-subtext-0 mt-1 text-xs">{t(stat.label)}</p>
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-end">
+              <ExportButton
+                onExport={() => {}}
+                onExportAll={
+                  traceability
+                    ? () => exportAllData(spec, suite, traceability)
+                    : undefined
+                }
+              />
+            </div>
           </div>
         )}
       </div>

@@ -127,7 +127,8 @@
   "export": {
     "button": "Exporter",
     "csv": "Exporter CSV",
-    "xlsx": "Exporter XLSX"
+    "xlsx": "Exporter XLSX",
+    "all": "Exporter tout (XLSX)"
   },
   "toast": {
     "dismiss": "Fermer"

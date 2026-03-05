@@ -8,13 +8,12 @@ llm:
   provider: "ollama"
   model_name: "qwen3:8b"
   api_base_url: "http://localhost:11434"
-  max_tokens: 16384
+  max_tokens: 32768
   temperature: 0.1
-  timeout_secs: 300
+  timeout_secs: 3600
   # Taille du contexte (num_ctx) envoye a Ollama.
-  # Reduire economise de la VRAM (KV cache). 8192 suffit pour spec-forge.
-  # Qwen3:8B defaut=32768 → ~4 GB de KV cache ; 8192 → ~1 GB.
-  context_size: 8192
+  # 32768 = defaut qwen3:8b, utilise ~4 GB KV cache (necessite 12+ GB VRAM).
+  context_size: 32768
 
 templates:
   directory: "templates"
